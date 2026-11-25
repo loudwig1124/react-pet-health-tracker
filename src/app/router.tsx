@@ -132,4 +132,8 @@ export const appRoutes: RouteObject[] = [
 ]
 
 /** Browser router for the app; tests build a memory router from `appRoutes`. */
-export const router = createBrowserRouter(appRoutes)
+// BASE_URL is '/' for local runs and '/<repo>/' on GitHub Pages; the router must
+// share it or every deep link 404s when the app is served from a sub-path.
+export const router = createBrowserRouter(appRoutes, {
+  basename: import.meta.env.BASE_URL,
+})

@@ -22,11 +22,31 @@ The approved plan is in [`docs/plan/`](./docs/plan/); `00-PLAN.md` is the approv
 | Tests       | Vitest **5.1.1** (node + jsdom projects), Testing Library, `fake-indexeddb`, Playwright **1.65.1** (Chromium only)                                                           |
 | Lint/format | oxlint **1.95**, oxfmt **0.80** (sorts imports and Tailwind classes)                                                                                                         |
 
+## Getting started (from a fresh clone)
+
+**Prerequisites:** Node **22 or newer** (the build and tests run on 24), and **pnpm 10**
+(`npm i -g pnpm@10`, or `corepack enable`).
+
+```bash
+git clone https://github.com/loudwig1124/pet-health-tracker-web.git
+cd pet-health-tracker-web
+pnpm install          # resolves the lockfile; no postinstall scripts run
+pnpm dev              # http://127.0.0.1:5173
+```
+
+First launch shows the **Welcome** card: your name, your first pet, or one tap to load the sample
+household. Nothing leaves the browser — no account, no server, no network calls.
+
+**A hosted copy lives at <https://loudwig1124.github.io/pet-health-tracker-web/>** (same app, same
+local-only storage, deployed by `.github/workflows/deploy-web.yml`).
+
+> On the machine this was developed on, `~/Library/Caches` is read-only under a sandbox, so a local
+> (gitignored) `.npmrc` points pnpm's store at `../.pnpm-store`. A fresh clone does not have that
+> file and does not need it.
+
 ## Commands
 
-Run everything from this directory. In this sandbox `~/Library/Caches` is read-only, so
-[`.npmrc`](./.npmrc) points pnpm's store/cache at the workspace siblings (`../.pnpm-store`,
-`../.pnpm-cache`); ordinary machines can delete that file.
+Run everything from this directory.
 
 ```bash
 pnpm install

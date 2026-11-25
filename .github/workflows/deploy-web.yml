@@ -1,0 +1,70 @@
+# Builds the desktop app and publishes it to GitHub Pages.
+#
+# The app is local-only: IndexedDB in the visitor's browser, no API calls. Pages
+# only serves the static bundle; every visitor gets their own household.
+#
+# One-time setup: repository Settings -> Pages -> Source: GitHub Actions.
+name: Deploy web build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck, lint and unit tests
+        run: |
+          pnpm typecheck
+          pnpm lint
+          pnpm test
+
+      - name: Build for the repository path
+        # VITE_BASE feeds both Vite's asset base and the router's basename.
+        run: pnpm build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+
+      - name: SPA fallback
+        # Deep links are handled by React Router, so unknown paths must return
+        # the app instead of GitHub's 404 page.
+        run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
