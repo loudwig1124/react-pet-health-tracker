@@ -8,6 +8,7 @@
 | Date | 2026-11-25 14:08–14:11 (Asia/Manila) |
 | Evidence log | [`evidence/gate-5.log`](./evidence/gate-5.log) · preview log: `evidence/preview-5.log` |
 | Previous gates | [`GATE-1.md`](./GATE-1.md) (M1) · [`GATE-3.md`](./GATE-3.md) (M2+M3) |
+| Superseded by | [`GATE-6.md`](./GATE-6.md) — final numbers and screenshots after the t11–t13 visual fixes; this report remains the M5-freeze evidence and the “before” pictures |
 | Command | `GATE=5 bash scripts/gate.sh` |
 | Screenshots | 12 files: [`shots/m5-1440-dashboard.png`](./shots/m5-1440-dashboard.png), `m5-1024-dashboard.png`, `m5-900-dashboard.png`, and the same three widths for `pets`, `appointments`, `journal` |
 

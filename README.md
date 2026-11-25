@@ -5,7 +5,9 @@ several pets, a shared journal, vet appointments, vaccinations and append-only c
 No accounts, no server, no network — everything lives in this browser's own storage.
 
 The approved plan is in [`docs/plan/`](./docs/plan/); `00-PLAN.md` is the approval record and
-`06-build-plan.md` is the milestone contract. This README is the working entry point for the build.
+`06-build-plan.md` is the milestone contract. **Release-one acceptance and the demo script live in
+[`docs/build/ACCEPTANCE.md`](./docs/build/ACCEPTANCE.md)**; the milestone gate reports are
+`docs/build/GATE-{1,3,5,6}.md`. This README is the working entry point for the build.
 
 ## Stack
 
