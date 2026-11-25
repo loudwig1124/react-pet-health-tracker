@@ -2,13 +2,12 @@ import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 
 /**
- * F4 create command plumbing: `?new=1` opens a screen's create dialog once.
+ * Create-command plumbing: `?new=1` opens a screen's create dialog once.
  *
- * The ⌘N shortcut and the palette's create commands both navigate to
- * `?new=1` (with `&pet=` when a pet is in scope), so every screen has exactly
- * one way to express "open the form", and it is deep-linkable. The parameter is
- * removed with a replace as soon as it is consumed, so Back/reload never
- * re-opens a dialog the user closed.
+ * The command palette's create commands navigate to `?new=1`, so every screen
+ * has exactly one way to express "open the form", and it is deep-linkable. The
+ * parameter is removed with a replace as soon as it is consumed, so Back/reload
+ * never re-opens a dialog the user closed.
  */
 export function useCreateIntent(open: () => void, enabled: boolean): void {
   const [searchParams, setSearchParams] = useSearchParams()

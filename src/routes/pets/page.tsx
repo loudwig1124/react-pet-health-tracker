@@ -83,7 +83,7 @@ export function PetsPage() {
     setEditorOpen(true)
   }
 
-  // ⌘N / the palette's "Add pet" command land here (F4 create intent).
+  // The palette's "Add pet" create command lands here (?new=1).
   useCreateIntent(openCreate, live.status === 'ready')
 
   const data = live.status === 'ready' ? live.data : null

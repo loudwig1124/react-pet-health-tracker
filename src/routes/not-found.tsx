@@ -9,8 +9,8 @@ export function Component() {
       <p className="text-overline text-muted-foreground">404</p>
       <h2 className="text-title mt-2">Page not found</h2>
       <p className="text-body text-muted-foreground mt-3">
-        That address is not part of the household notebook. Use the sidebar, ⌘1–6, or head back to
-        the dashboard.
+        That address is not part of the household notebook. Use the sidebar or head back to the
+        dashboard.
       </p>
       <div className="mt-6 flex justify-center">
         <Button asChild>

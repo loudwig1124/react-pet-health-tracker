@@ -83,7 +83,7 @@ export function AppointmentsPage() {
   const [monthOverride, setMonthOverride] = useState<DateKey | null>(null)
   const month = monthOverride ?? monthOf(search.day ?? today)
 
-  // ⌘N / the palette's "Book visit" command (F4 create intent).
+  // The palette's "Book visit" create command lands here (?new=1).
   useCreateIntent(() => setBookingOpen(true), state.kind === 'ready')
 
   const data = state.kind === 'ready' ? state.data : null

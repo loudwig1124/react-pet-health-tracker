@@ -94,56 +94,28 @@ describe('AppShell (M1)', () => {
     await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'expanded'))
   })
 
-  it('navigates with ⌘1–6 and toggles the rail with ⌘B', async () => {
+  it('navigates by clicking the sidebar and toggles the rail from the header', async () => {
     renderApp('/')
     await waitForShell()
 
-    act(() => {
-      fireEvent.keyDown(window, { key: '2', metaKey: true })
-    })
+    fireEvent.click(screen.getByTestId('nav-pets'))
     await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Pets'))
 
-    act(() => {
-      fireEvent.keyDown(window, { key: '6', metaKey: true })
-    })
+    fireEvent.click(screen.getByTestId('nav-journal'))
     await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Journal'))
 
-    // Plain digits work outside fields (browser-reserved modified digits fallback).
-    act(() => {
-      fireEvent.keyDown(window, { key: '1' })
-    })
-    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboard'))
-
     const sidebar = screen.getByTestId('app-sidebar')
-    act(() => {
-      fireEvent.keyDown(window, { key: 'b', metaKey: true })
-    })
+    fireEvent.click(screen.getByTestId('sidebar-toggle'))
     await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'collapsed'))
+    fireEvent.click(screen.getByTestId('sidebar-toggle'))
+    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'expanded'))
   })
 
-  it('opens the simulated command-palette event for ⌘K without palette code', async () => {
+  it('opens the command palette from the header Search button', async () => {
     renderApp('/')
     await waitForShell()
 
-    let fired = 0
-    const listener = (): void => {
-      fired += 1
-    }
-    window.addEventListener('pet-health:command-palette', listener)
-    try {
-      // Dispatch is synchronous, but the shell's keydown effect can land a tick
-      // after `waitForShell()` on a slow CI runner — the first press would be
-      // lost. Re-pressing inside `waitFor` is safe (it only increments a
-      // counter) and removes the race without weakening the assertion.
-      await waitFor(() => {
-        act(() => {
-          fireEvent.keyDown(window, { key: 'k', metaKey: true })
-        })
-        expect(fired).toBeGreaterThan(0)
-      })
-    } finally {
-      window.removeEventListener('pet-health:command-palette', listener)
-    }
-    expect(fired).toBe(1)
+    fireEvent.click(screen.getByTestId('header-search'))
+    expect(await screen.findByTestId('command-palette')).toBeInTheDocument()
   })
 })

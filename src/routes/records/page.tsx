@@ -63,7 +63,7 @@ export function RecordsPage() {
 
   const openAdd = (): void => setAdding(true)
 
-  // ⌘N / "Add record" create command (F4). The dialog needs at least one pet.
+  // The palette's "Add record" create command lands here. Needs a pet.
   useCreateIntent(() => {
     if (hasPets) {
       setAdding(true)

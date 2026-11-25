@@ -3,6 +3,7 @@ import {
   FileHeart,
   LayoutDashboard,
   NotebookPen,
+  PanelLeft,
   PawPrint,
   Syringe,
 } from 'lucide-react'
@@ -11,7 +12,6 @@ import { lazy, Suspense } from 'react'
 import { Link, useLocation } from 'react-router'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Kbd } from '@/components/ui/kbd'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useOwnerIdentity } from '@/lib/hooks/useOwnerIdentity'
@@ -53,6 +53,8 @@ function ownerInitial(name: string): string {
 export interface AppSidebarProps {
   open: boolean
   onToggle: () => void
+  /** False when the rail is forced (<1024): there is nothing to expand to. */
+  showToggle: boolean
 }
 
 /**
@@ -68,7 +70,7 @@ export interface AppSidebarProps {
  * this component. Icon motion is the CSS contract in `index.css` (70 % at rest
  * → 100 % + scale(1.06) + 1 px lift on hover, 120 ms, reduced-motion aware).
  */
-export function AppSidebar({ open, onToggle }: AppSidebarProps) {
+export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
   const { pathname } = useLocation()
   const owner = useOwnerIdentity()
 
@@ -83,7 +85,12 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
       style={{ width: open ? 'var(--sidebar-width)' : 'var(--sidebar-width-rail)' }}
       className="border-border bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col overflow-hidden border-r transition-[width] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"
     >
-      <div className="border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b px-3">
+      <div
+        className={cn(
+          'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b',
+          rail ? 'justify-center px-0' : 'justify-between gap-2 px-3',
+        )}
+      >
         <Link
           to="/"
           aria-label="Pet Health Tracker — Dashboard"
@@ -99,10 +106,30 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
             </span>
           )}
         </Link>
+
+        {/*
+         * The rail toggle lives here, not in the page header: the header then
+         * holds only the title, which lines up with the cards, and the button
+         * gets real air on both sides instead of being wedged between the
+         * sidebar edge and the title.
+         */}
+        {showToggle ? (
+          <button
+            type="button"
+            aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-pressed={open}
+            title={open ? 'Collapse sidebar' : 'Expand sidebar'}
+            onClick={onToggle}
+            data-testid="sidebar-toggle"
+            className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <PanelLeft aria-hidden="true" className="size-4" />
+          </button>
+        ) : null}
       </div>
 
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-3"
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4"
         aria-label="Primary"
       >
         {(
@@ -152,14 +179,13 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
                     ) : (
                       <>
                         <span className="truncate">{item.label}</span>
-                        <span className="ml-auto flex shrink-0 items-center gap-1.5">
-                          {badgeKind === null ? null : (
+                        {badgeKind === null ? null : (
+                          <span className="ml-auto flex shrink-0 items-center">
                             <Suspense fallback={null}>
                               <SidebarAttentionBadge kind={badgeKind} />
                             </Suspense>
-                          )}
-                          <Kbd className="text-caption h-5 min-w-5">{`⌘${item.shortcut}`}</Kbd>
-                        </span>
+                          </span>
+                        )}
                       </>
                     )}
                   </Link>
@@ -171,10 +197,7 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
                       <Tooltip>
                         <TooltipTrigger asChild>{link}</TooltipTrigger>
                         <TooltipContent side="right" align="center">
-                          <span className="flex items-center gap-2">
-                            {item.label}
-                            <Kbd className="text-caption">{`⌘${item.shortcut}`}</Kbd>
-                          </span>
+                          {item.label}
                         </TooltipContent>
                       </Tooltip>
                     ) : (
@@ -205,10 +228,7 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right" align="center">
-              <span className="flex items-center gap-2">
-                {owner?.name ?? 'Profile'}
-                <Kbd className="text-caption">⌘,</Kbd>
-              </span>
+              {owner?.name ?? 'Profile'}
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -230,17 +250,16 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
               </span>
               <span className="text-caption text-muted-foreground truncate">Profile</span>
             </span>
-            <Kbd className="text-caption h-5 min-w-5 shrink-0">⌘,</Kbd>
           </Link>
         )}
       </div>
 
-      {/* The rail's toggle stays keyboard/header reachable; this is the visual handle. */}
+      {/* The rail's visual handle; the header toggle is the visible control. */}
       <button
         type="button"
         onClick={onToggle}
         aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
-        title="Toggle sidebar (⌘B)"
+        title="Toggle sidebar"
         data-testid="sidebar-rail-toggle"
         className="sr-only"
       >

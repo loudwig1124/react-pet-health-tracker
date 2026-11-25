@@ -98,9 +98,8 @@
   --nav-row-compact: 32px;
   --header-height: 64px;
   --header-height-compact: 56px;
-  --content-max-narrow: 1200px;
-  --content-max-wide: 1440px;
-  --page-gutter: 32px;
+  /* The single shared left/right gutter for header + content (03 §1, revised). */
+  --page-gutter: 24px;
 
   /* ---------------------------------------------------------------------
    * 5. Type scale and font (04 §1.3) — system stack, no webfont
@@ -130,12 +129,6 @@
   --row-height: 44px;
   --feed-row-height: 64px;
   --control-height: 36px;
-}
-
-@media (max-width: 1439px) {
-  :root {
-    --page-gutter: 24px;
-  }
 }
 
 @media (max-width: 1023px) {

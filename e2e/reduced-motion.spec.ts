@@ -50,18 +50,18 @@ test('navigation and the rail keep working under reduced motion', async ({ page 
   await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
 
   for (const [key, title] of DESTINATIONS) {
-    await page.keyboard.press(`Meta+${DESTINATIONS.findIndex(([item]) => item === key) + 1}`)
+    await page.getByTestId(`nav-${key}`).click()
     await expect(page.getByTestId('page-title')).toHaveText(title)
     await expectNoHorizontalOverflow(page, `${title} @900`)
   }
 
   await page.setViewportSize({ width: 1440, height: 900 })
   // The preference is `auto`, so leaving the forced-rail band must restore the
-  // expanded sidebar before the shortcut is exercised.
+  // expanded sidebar before the mouse toggle is exercised.
   await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
-  await page.keyboard.press('Meta+b')
+  await page.getByTestId('sidebar-toggle').click()
   await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
-  await page.keyboard.press('Meta+b')
+  await page.getByTestId('sidebar-toggle').click()
   await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
 })
 

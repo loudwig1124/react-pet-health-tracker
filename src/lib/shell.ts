@@ -1,22 +1,22 @@
 /**
- * Shell contract shared by the sidebar, the header and the keyboard layer.
+ * Shell contract shared by the sidebar, the header and the content column.
  *
- * Pure and React-free so the navigation set, the shortcut matcher and the
- * responsive collapse rule are unit-testable (03 §1–§2):
+ * Pure and React-free so the navigation set and the responsive collapse rule
+ * are unit-testable (03 §1–§2):
  *
- *   ≥1280 px  expanded by default, collapsible with ⌘B and persisted
+ *   ≥1280 px  expanded by default, collapsible from the header toggle and persisted
  *   1024–1279 rail by default, expandable on demand (temporary, not persisted)
  *   <1024     rail forced — never overlays or hides the destination list
  */
 
 /** The six destinations, in sidebar order (03 §2, revised). */
 export const APP_DESTINATIONS = [
-  { key: 'dashboard', label: 'Dashboard', path: '/', shortcut: '1' },
-  { key: 'pets', label: 'Pets', path: '/pets', shortcut: '2' },
-  { key: 'appointments', label: 'Appointments', path: '/appointments', shortcut: '3' },
-  { key: 'vaccinations', label: 'Vaccinations', path: '/vaccinations', shortcut: '4' },
-  { key: 'records', label: 'Health records', path: '/records', shortcut: '5' },
-  { key: 'journal', label: 'Journal', path: '/journal', shortcut: '6' },
+  { key: 'dashboard', label: 'Dashboard', path: '/' },
+  { key: 'pets', label: 'Pets', path: '/pets' },
+  { key: 'appointments', label: 'Appointments', path: '/appointments' },
+  { key: 'vaccinations', label: 'Vaccinations', path: '/vaccinations' },
+  { key: 'records', label: 'Health records', path: '/records' },
+  { key: 'journal', label: 'Journal', path: '/journal' },
 ] as const
 
 export type AppDestination = (typeof APP_DESTINATIONS)[number]
@@ -24,7 +24,6 @@ export type AppDestinationKey = AppDestination['key']
 
 /** Profile is the pinned footer row, never a seventh nav item (03 §2). */
 export const PROFILE_PATH = '/profile'
-export const PROFILE_SHORTCUT = ','
 
 /* ------------------------------------------------------------ sidebar mode */
 
@@ -63,102 +62,12 @@ export function parseSidebarPreference(raw: string | null | undefined): SidebarP
   return raw === 'rail' ? 'rail' : 'auto'
 }
 
-/* --------------------------------------------------------------- shortcuts */
-
-export type ShellShortcut =
-  | { type: 'navigate'; path: string }
-  | { type: 'toggle-sidebar' }
-  | { type: 'command-palette' }
-  | { type: 'create' }
-  | { type: 'shortcut-sheet' }
-
-/** The subset of KeyboardEvent the matcher needs (pure tests can pass literals). */
-export interface ShellKeyEvent {
-  key: string
-  metaKey?: boolean
-  ctrlKey?: boolean
-  altKey?: boolean
-  shiftKey?: boolean
-  target?: EventTarget | null
-}
-
-function isEditableTarget(target: EventTarget | null | undefined): boolean {
-  if (target == null) {
-    return false
-  }
-  const element = target as {
-    tagName?: unknown
-    isContentEditable?: unknown
-  }
-  const tagName = typeof element.tagName === 'string' ? element.tagName.toUpperCase() : ''
-  if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT') {
-    return true
-  }
-  return element.isContentEditable === true
-}
-
-/**
- * Resolves one key event to a shell action. ⌘/Ctrl modifiers are the guaranteed
- * path; per 03 §2 plain `1`–`6` and `N` also work outside text fields (browsers
- * may reserve the modified digits/letters). `?` opens the shortcut sheet. The
- * matcher never fires inside a field.
- */
-export function matchShellShortcut(event: ShellKeyEvent): ShellShortcut | null {
-  if (event.altKey === true) {
-    return null
-  }
-
-  const key = event.key.toLowerCase()
-  const primary = event.metaKey === true || event.ctrlKey === true
-  const inField = isEditableTarget(event.target)
-
-  if (primary) {
-    if (key === 'b') {
-      return { type: 'toggle-sidebar' }
-    }
-    if (key === 'k') {
-      return { type: 'command-palette' }
-    }
-    if (key === 'n') {
-      return { type: 'create' }
-    }
-    if (key === PROFILE_SHORTCUT) {
-      return { type: 'navigate', path: PROFILE_PATH }
-    }
-    if (!inField) {
-      const destination = APP_DESTINATIONS.find((item) => item.shortcut === key)
-      if (destination !== undefined) {
-        return { type: 'navigate', path: destination.path }
-      }
-    }
-    return null
-  }
-
-  if (inField) {
-    return null
-  }
-
-  // F8: `?` (shift + /) opens the cheat sheet. `event.key` is already "?".
-  if (event.key === '?') {
-    return { type: 'shortcut-sheet' }
-  }
-  // The documented ⌘N alias: plain N outside a field (03 §2).
-  if (key === 'n') {
-    return { type: 'create' }
-  }
-
-  const destination = APP_DESTINATIONS.find((item) => item.shortcut === key)
-  return destination === undefined ? null : { type: 'navigate', path: destination.path }
-}
-
 /* ------------------------------------------------------------- route handles */
 
-/** Metadata a lazy route declares for the shell header/content width (03 §1). */
+/** Metadata a lazy route declares for the shell header (03 §1). */
 export interface RouteHandle {
   title: string
   description: string
-  /** 1200 for dashboard/journal/profile; 1440 for the four data tables. */
-  maxWidth?: 1200 | 1440
 }
 
 /** Finds the deepest route handle carrying a title. */

@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
  * Shown by the root route while the initial DB boot loader runs
  * (`HydrateFallback`, 06 M1). It mirrors the real shell at 1440 and 1024 so the
  * first paint does not jump when the shell replaces it: 240/72 px sidebar,
- * 64/56 px header, content at the page gutter.
+ * 64/56 px header, header and content full-width at the shared page gutter.
  */
 export function HydrateFallback() {
   return (
@@ -26,7 +26,7 @@ export function HydrateFallback() {
           <Skeleton className="h-7 w-40" />
           <Skeleton className="ml-auto h-8 w-24" />
         </div>
-        <div className="mx-auto w-full max-w-[var(--content-max-narrow)] px-[var(--page-gutter)] pt-6">
+        <div className="w-full px-[var(--page-gutter)] pt-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[0, 1, 2, 3].map((index) => (
               <Skeleton key={index} className="h-24 rounded-xl" />

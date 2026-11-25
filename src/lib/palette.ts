@@ -327,7 +327,7 @@ export function rememberPaletteItem(
   return [item.id, ...ids.filter((id) => id !== item.id)].slice(0, limit)
 }
 
-/** The create group, used by the dashboard/profile ⌘N intent. */
+/** The create commands shown in the palette's empty state. */
 export function createCommandPaletteItems(): PaletteItem[] {
   return CREATE_COMMANDS.map((command) => ({
     id: `create:${command.key}`,

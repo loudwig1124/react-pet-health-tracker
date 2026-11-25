@@ -115,26 +115,21 @@ test('mouse navigation reaches all six destinations and the Profile footer', asy
   await expectTitle(page, 'Profile')
 })
 
-test('⌘1–6 navigate, ⌘B toggles the rail and ⌘, opens Profile', async ({ page }) => {
+test('the rail toggle and the Profile footer are mouse-only affordances at 1440', async ({
+  page,
+}) => {
   await openApp(page)
+  const sidebar = page.getByTestId('app-sidebar')
+  await expect(sidebar).toHaveAttribute('data-state', 'expanded')
 
-  await page.keyboard.press('Meta+2')
-  await expectTitle(page, 'Pets')
+  // The former ⌘B path is now the header arrow button, flush beside the sidebar.
+  await page.getByTestId('sidebar-toggle').click()
+  await expect(sidebar).toHaveAttribute('data-state', 'collapsed')
+  await page.getByTestId('sidebar-toggle').click()
+  await expect(sidebar).toHaveAttribute('data-state', 'expanded')
 
-  await page.keyboard.press('Meta+6')
-  await expectTitle(page, 'Journal')
-
-  await page.keyboard.press('Meta+1')
-  await expectTitle(page, 'Dashboard')
-
-  await page.keyboard.press('Meta+b')
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
-  await page.keyboard.press('Meta+b')
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
-
-  await page.keyboard.down('Meta')
-  await page.keyboard.press(',')
-  await page.keyboard.up('Meta')
+  // The former ⌘, path is the pinned Profile footer.
+  await page.getByTestId('nav-profile').click()
   await expectTitle(page, 'Profile')
 })
 
@@ -173,10 +168,13 @@ test('live resize 1440 → 1024 → 900 collapses to the rail without overflow',
   await expectNoHorizontalOverflow(page, '900')
 })
 
-test('keyboard focus stays visible after the rail collapses', async ({ page }) => {
+test('focus inside the Add pet dialog stays visible', async ({ page }) => {
   await page.setViewportSize({ width: 900, height: 800 })
-  await openApp(page)
+  await openApp(page, '/pets')
+  await page.getByTestId('pet-add').click()
+  await expect(page.getByTestId('pet-form')).toBeVisible()
 
+  // Tab is only used inside the dialog here: no global shortcut is involved.
   await page.keyboard.press('Tab')
   const focus = await page.evaluate(() => {
     const element = document.activeElement as HTMLElement | null
@@ -185,7 +183,7 @@ test('keyboard focus stays visible after the rail collapses', async ({ page }) =
     }
     const style = getComputedStyle(element)
     return {
-      label: element.getAttribute('aria-label') ?? element.textContent?.trim() ?? '',
+      label: element.getAttribute('aria-label') ?? element.textContent?.trim() ?? element.id,
       outlineStyle: style.outlineStyle,
       outlineWidth: style.outlineWidth,
       boxShadow: style.boxShadow,

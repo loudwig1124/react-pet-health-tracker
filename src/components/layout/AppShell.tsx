@@ -10,7 +10,6 @@ import {
   type FirstRunSnapshot,
 } from '@/app/first-run-state'
 import { AppProviders } from '@/app/providers'
-import { useShellShortcuts } from '@/app/shell-shortcuts'
 import { AppHeader } from '@/components/layout/AppHeader'
 import { AppSidebar } from '@/components/layout/AppSidebar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -18,12 +17,10 @@ import { applyDensity } from '@/lib/density'
 import { useDensity } from '@/lib/hooks/useDensity'
 import { useSidebarModel } from '@/lib/hooks/useSidebar'
 import { routeHandleFrom, type RouteHandle } from '@/lib/shell'
-import { cn } from '@/lib/utils'
 
 const FALLBACK_HANDLE: RouteHandle = {
   title: 'Pet Health Tracker',
   description: 'An offline household notebook for pets.',
-  maxWidth: 1200,
 }
 
 /** The takeover is only needed on a fresh/reset household: lazy, like a route. */
@@ -41,26 +38,23 @@ const Toaster = lazy(() =>
 )
 
 /**
- * F3/F8 overlays: the shell only owns their open/closed state. The components
- * (palette, shortcut sheet) live in their own lazy chunks, mounted on demand by
- * the `pet-health:command-palette` / `pet-health:shortcut-sheet` events.
+ * The command palette is the one overlay: the shell only owns its open/closed
+ * state and the component lives in its own lazy chunk, mounted on demand by the
+ * `pet-health:command-palette` event from the header Search button.
  */
 const CommandPalette = lazy(() =>
   import('@/components/layout/CommandPalette').then((module) => ({
     default: module.CommandPalette,
   })),
 )
-const ShortcutSheet = lazy(() =>
-  import('@/components/layout/ShortcutSheet').then((module) => ({
-    default: module.ShortcutSheet,
-  })),
-)
 
 /**
  * The shell (03 §1): fixed sidebar | content column. The content column is the
- * single scroll container, its header is sticky and opaque, and the content is
- * centred at 1200/1440 px depending on the matched route's handle. Route
- * children are lazy; only the shell is eager (D8).
+ * single scroll container, its header is sticky and opaque. Header and content
+ * share one page gutter and run the full width of the main area — nothing is
+ * centred or capped — so the rail toggle sits beside the sidebar and the page
+ * title lines up with the cards below it. Route children are lazy; only the
+ * shell is eager (D8).
  *
  * M4 adds three cross-cutting pieces here:
  * - the first-run **mode** (03 §5): no pets + an unnamed/reset household hides
@@ -93,18 +87,8 @@ export function AppShell() {
         })
 
   const handle = routeHandleFrom(matches) ?? FALLBACK_HANDLE
-  const maxWidth = handle.maxWidth ?? 1200
-  const widthClass =
-    maxWidth === 1440 ? 'max-w-[var(--content-max-wide)]' : 'max-w-[var(--content-max-narrow)]'
 
   const overlays = useDesktopOverlays()
-
-  useShellShortcuts({
-    navigate: (path) => navigate(path),
-    toggleSidebar: sidebar.toggle,
-    sidebarForced: sidebar.forced,
-    pathname: location.pathname,
-  })
 
   // Density changes spacing only; the token overrides key off this attribute.
   useEffect(() => {
@@ -141,26 +125,16 @@ export function AppShell() {
         data-testid="app-shell"
         data-sidebar-mode={sidebar.mode}
       >
-        <AppSidebar open={sidebar.open} onToggle={sidebar.toggle} />
+        <AppSidebar open={sidebar.open} onToggle={sidebar.toggle} showToggle={!sidebar.forced} />
         <main
           ref={scrollRef}
           className="app-scroll relative h-svh min-w-0 flex-1"
           data-testid="app-scroll"
         >
-          <AppHeader
-            title={handle.title}
-            description={handle.description}
-            maxWidth={maxWidth}
-            showToggle={!sidebar.forced}
-            open={sidebar.open}
-            onToggle={sidebar.toggle}
-          />
+          <AppHeader title={handle.title} description={handle.description} />
           <div
             data-testid="app-content"
-            className={cn(
-              'mx-auto w-full min-w-0 shrink-0 px-[var(--page-gutter)] pt-6 pb-10',
-              widthClass,
-            )}
+            className="w-full min-w-0 shrink-0 px-[var(--page-gutter)] pt-6 pb-10"
           >
             <div key={location.pathname} className="app-page">
               <Outlet />
@@ -173,15 +147,7 @@ export function AppShell() {
       </Suspense>
       {overlays.paletteOpen ? (
         <Suspense fallback={null}>
-          <CommandPalette
-            initialSection={overlays.paletteSection}
-            onClose={overlays.closePalette}
-          />
-        </Suspense>
-      ) : null}
-      {overlays.shortcutSheetOpen ? (
-        <Suspense fallback={null}>
-          <ShortcutSheet onClose={overlays.closeShortcutSheet} />
+          <CommandPalette onClose={overlays.closePalette} />
         </Suspense>
       ) : null}
     </AppProviders>

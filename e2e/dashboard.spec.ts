@@ -147,11 +147,13 @@ test('no service worker is registered and the dashboard stays under the DOM budg
   expect(doses.map((dose) => dose.id).sort()).toEqual(['e2e-dose-felv', 'e2e-dose-rabies'])
 })
 
-test('⌘K palette searches pets, navigates, and closes with Escape', async ({ page }) => {
+test('the header Search button opens the palette; arrows, Enter and Escape work inside it', async ({
+  page,
+}) => {
   await seedHousehold(page, dueData)
   await openApp(page, '/')
 
-  await page.keyboard.press('Meta+k')
+  await page.getByTestId('header-search').click()
   await expect(page.getByTestId('command-palette')).toBeVisible()
   await expect(page.getByTestId('command-input')).toBeFocused()
 
@@ -160,42 +162,85 @@ test('⌘K palette searches pets, navigates, and closes with Escape', async ({ p
   await expect(page.getByTestId('command-group-pets')).toBeVisible()
   await expect(page.getByTestId('command-item-pet:e2e-pet-bella')).toBeVisible()
 
+  // Arrow keys move the active option inside the palette (widget-level keys).
+  await page.getByTestId('command-input').fill('a')
+  await expect(page.getByTestId('command-input')).toHaveAttribute(
+    'aria-activedescendant',
+    'command-option-0',
+  )
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByTestId('command-input')).toHaveAttribute(
+    'aria-activedescendant',
+    'command-option-1',
+  )
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('command-input')).toHaveAttribute(
+    'aria-activedescendant',
+    'command-option-0',
+  )
+
+  await page.getByTestId('command-input').fill('Bella')
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('command-palette')).toHaveCount(0)
   await expect(page).toHaveURL(/\/pets\/e2e-pet-bella(\/health)?$/)
   await expect(page.getByTestId('pet-name')).toHaveText('Bella')
 
-  // Escape closes without navigating.
+  // Escape closes without navigating (dialog-level key, not a global shortcut).
   await openApp(page, '/')
-  await page.keyboard.press('Meta+k')
+  await page.getByTestId('header-search').click()
   await expect(page.getByTestId('command-palette')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('command-palette')).toHaveCount(0)
   await expect(page).toHaveURL(/\/$/)
 })
 
-test('⌘N opens the create commands and a create command opens its dialog', async ({ page }) => {
+test('every palette create command opens its dialog', async ({ page }) => {
   await seedHousehold(page, dueData)
-  await openApp(page, '/')
 
-  await page.keyboard.press('Meta+n')
-  await expect(page.getByTestId('command-palette')).toBeVisible()
-  await expect(page.getByTestId('command-group-create')).toBeVisible()
-  await page.getByTestId('command-item-create:visit').click()
+  const closeInDialog = async (name: string): Promise<void> => {
+    await page.getByRole('dialog').getByRole('button', { name }).click()
+  }
 
-  // The route consumes `?new=1` immediately, so the open dialog (not the URL
-  // parameter) is the stable assertion; the path proves where it landed.
-  await expect(page.getByTestId('booking-form')).toBeVisible()
-  await expect(page).toHaveURL(/\/appointments(\?new=1)?$/)
+  const commands = [
+    { item: 'create:pet', path: /\/pets(\?new=1)?$/, ready: 'pet-form', close: 'Cancel' },
+    {
+      item: 'create:visit',
+      path: /\/appointments(\?new=1)?$/,
+      ready: 'booking-form',
+      close: 'Cancel',
+    },
+    {
+      item: 'create:vaccination',
+      path: /\/vaccinations(\?new=1)?$/,
+      ready: 'vaccination-form',
+      close: 'Cancel',
+    },
+    { item: 'create:record', path: /\/records(\?new=1)?$/, ready: 'record-form', close: 'Cancel' },
+    { item: 'create:journal', path: /\/journal(\?new=1)?$/, ready: 'journal-editor', close: null },
+  ] as const
+
+  for (const command of commands) {
+    await openApp(page, '/')
+    await page.getByTestId('header-search').click()
+    await expect(page.getByTestId('command-group-create')).toBeVisible()
+    await page.getByTestId(`command-item-${command.item}`).click()
+    await expect(page).toHaveURL(command.path)
+    await expect(page.getByTestId(command.ready)).toBeVisible()
+    if (command.close !== null) {
+      await closeInDialog(command.close)
+      await expect(page.getByTestId(command.ready)).toHaveCount(0)
+    } else {
+      // The journal create intent is consumed with a replace; the editor is open.
+      await expect(page).toHaveURL(/\/journal$/)
+    }
+  }
 })
 
-test('palette groups never exceed 8 results and the shortcut sheet opens with ?', async ({
-  page,
-}) => {
+test('palette result groups stay within the 8-per-group cap', async ({ page }) => {
   await seedHousehold(page, dueData)
   await openApp(page, '/')
 
-  await page.keyboard.press('Meta+k')
+  await page.getByTestId('header-search').click()
   await page.getByTestId('command-input').fill('a')
   await expect(page.getByTestId('command-palette')).toBeVisible()
   const groups = page.locator('[data-testid^="command-group-"]')
@@ -206,38 +251,5 @@ test('palette groups never exceed 8 results and the shortcut sheet opens with ?'
     expect(await items.count(), `group ${index} exceeds the 8-result cap`).toBeLessThanOrEqual(8)
   }
   await page.keyboard.press('Escape')
-
-  // `?` outside a field opens the lazy shortcut sheet; Escape closes it.
-  await expect(page.getByTestId('shortcut-sheet')).toHaveCount(0)
-  await page.keyboard.press('Shift+?')
-  await expect(page.getByTestId('shortcut-sheet')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.getByTestId('shortcut-sheet')).toHaveCount(0)
-})
-
-test('documented plain-key aliases navigate, create and stay out of fields', async ({ page }) => {
-  await seedHousehold(page, dueData)
-  await openApp(page, '/')
-
-  // Plain 2-6 outside a field are the documented ⌘-reserved aliases (03 §2).
-  await page.keyboard.press('2')
-  await expect(page.getByTestId('page-title')).toHaveText('Pets')
-  await page.keyboard.press('6')
-  await expect(page.getByTestId('page-title')).toHaveText('Journal')
-
-  // Plain N means "create on this screen" (the route consumes ?new=1 and opens
-  // its dialog, so the dialog — not the URL — is the stable assertion).
-  await page.keyboard.press('2')
-  await expect(page.getByTestId('page-title')).toHaveText('Pets')
-  await page.keyboard.press('n')
-  await expect(page.getByTestId('pet-form')).toBeVisible()
-  await page.getByTestId('pet-form-cancel').click()
-  await expect(page.getByTestId('pet-form')).toHaveCount(0)
-
-  // A field swallows the alias: typing "2" must not navigate.
-  await openApp(page, '/pets')
-  await page.locator('#pets-search').fill('')
-  await page.locator('#pets-search').press('2')
-  await expect(page.getByTestId('page-title')).toHaveText('Pets')
-  await expect(page.locator('#pets-search')).toHaveValue('2')
+  await expect(page.getByTestId('command-palette')).toHaveCount(0)
 })

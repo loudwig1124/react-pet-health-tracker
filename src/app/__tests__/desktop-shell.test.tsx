@@ -1,5 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -31,7 +30,12 @@ async function seed(): Promise<void> {
   })
 }
 
-describe('M5 desktop shell (F3/F4/F8)', () => {
+/**
+ * The accepted build has **no keyboard shortcuts**: the owner removed them all,
+ * so every action must be reachable by mouse/click. These tests deliberately
+ * never press a shortcut key; the final test proves the removed keys are inert.
+ */
+describe('desktop shell — mouse paths and no keyboard shortcuts', () => {
   beforeEach(async () => {
     window.innerWidth = 1440
     window.localStorage.clear()
@@ -39,73 +43,131 @@ describe('M5 desktop shell (F3/F4/F8)', () => {
     await seed()
   })
 
-  it('⌘K mounts the lazy palette, focuses its input and Esc closes it', async () => {
-    renderApp('/')
+  it('opens the command palette from the Search button and navigates by clicking a result', async () => {
+    const router = renderApp('/')
     await waitForShell()
 
-    act(() => {
-      fireEvent.keyDown(window, { key: 'k', metaKey: true })
-    })
+    fireEvent.click(screen.getByTestId('header-search'))
     const palette = await screen.findByTestId('command-palette')
-    const input = await screen.findByTestId('command-input')
-    await waitFor(() => expect(input).toHaveFocus())
+    expect(within(palette).getByTestId('command-input')).toHaveFocus()
     expect(within(palette).getByRole('listbox')).toBeInTheDocument()
 
-    await userEvent.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByTestId('command-palette')).not.toBeInTheDocument())
+    fireEvent.change(within(palette).getByTestId('command-input'), {
+      target: { value: 'bella' },
+    })
+    const petItem = await screen.findByTestId(/^command-item-pet:/)
+    fireEvent.click(petItem)
+
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/pets\//))
+    expect(await screen.findByTestId('page-title')).toHaveTextContent('Pet')
   })
 
-  it('the header Search button opens the same palette', async () => {
+  it('runs a palette create command by clicking it', async () => {
     renderApp('/')
     await waitForShell()
 
     fireEvent.click(screen.getByTestId('header-search'))
-    expect(await screen.findByTestId('command-palette')).toBeInTheDocument()
+    const createGroup = await screen.findByTestId('command-group-create')
+    fireEvent.click(within(createGroup).getByTestId('command-item-create:visit'))
+
+    expect(await screen.findByTestId('booking-form')).toBeInTheDocument()
+    expect(screen.getByTestId('page-title')).toHaveTextContent('Appointments')
   })
 
-  it('? opens the shortcut sheet outside a field and does nothing while typing', async () => {
-    renderApp('/pets')
+  it('keeps navigation, the profile footer and the sidebar toggle clickable', async () => {
+    renderApp('/')
     await waitForShell()
 
-    act(() => {
-      fireEvent.keyDown(window, { key: '?' })
-    })
-    const sheet = await screen.findByTestId('shortcut-sheet')
-    expect(sheet).toHaveTextContent('Keyboard shortcuts')
-    expect(sheet).toHaveTextContent('Search and commands')
+    fireEvent.click(screen.getByTestId('nav-pets'))
+    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Pets'))
 
-    await userEvent.keyboard('{Escape}')
-    await waitFor(() => expect(screen.queryByTestId('shortcut-sheet')).not.toBeInTheDocument())
+    fireEvent.click(screen.getByTestId('nav-journal'))
+    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Journal'))
 
-    const input = document.createElement('input')
-    document.body.append(input)
-    input.focus()
-    act(() => {
-      fireEvent.keyDown(input, { key: '?' })
-    })
+    fireEvent.click(screen.getByTestId('nav-profile'))
+    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Profile'))
+
+    fireEvent.click(screen.getByTestId('nav-dashboard'))
+    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboard'))
+
+    const sidebar = screen.getByTestId('app-sidebar')
+    fireEvent.click(screen.getByTestId('sidebar-toggle'))
+    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'collapsed'))
+    fireEvent.click(screen.getByTestId('sidebar-toggle'))
+    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'expanded'))
+  })
+
+  it('no longer listens for any of the removed shortcut keys', async () => {
+    const router = renderApp('/')
+    await waitForShell()
+
+    const removedKeys: readonly [string, KeyboardEventInit][] = [
+      ['k', { metaKey: true }],
+      ['1', { metaKey: true }],
+      ['6', { metaKey: true }],
+      ['1', {}],
+      ['b', { metaKey: true }],
+      [',', { metaKey: true }],
+      ['?', {}],
+      ['n', {}],
+      ['n', { metaKey: true }],
+    ]
+    for (const [key, init] of removedKeys) {
+      fireEvent.keyDown(window, { key, ...init })
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(screen.queryByTestId('command-palette')).not.toBeInTheDocument()
     expect(screen.queryByTestId('shortcut-sheet')).not.toBeInTheDocument()
-    input.remove()
+    expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboard')
+    expect(screen.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
+    expect(router.state.location.pathname).toBe('/')
+
+    // The create alias is gone on a list screen too.
+    fireEvent.click(screen.getByTestId('nav-pets'))
+    await waitFor(() => expect(screen.getByTestId('page-title')).toHaveTextContent('Pets'))
+    fireEvent.keyDown(window, { key: 'n' })
+    fireEvent.keyDown(window, { key: 'n', metaKey: true })
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(screen.queryByTestId('pet-form')).not.toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/pets')
   })
 
-  it('⌘N on /pets opens the Add pet dialog through the ?new=1 intent', async () => {
-    const router = renderApp('/pets')
+  it('shows no shortcut affordances in the shell, sidebar or header', async () => {
+    renderApp('/')
     await waitForShell()
 
-    act(() => {
-      fireEvent.keyDown(window, { key: 'n', metaKey: true })
-    })
-    expect(await screen.findByTestId('pet-form')).toBeInTheDocument()
-    // The intent is consumed, so closing/reloading cannot re-open the dialog.
-    await waitFor(() => expect(router.state.location.search).toBe(''))
+    expect(screen.queryByTestId('header-shortcuts')).not.toBeInTheDocument()
+    expect(document.body.textContent).not.toContain('⌘')
+    expect(document.querySelectorAll('kbd')).toHaveLength(0)
+    expect(screen.getByTestId('header-search')).toHaveAttribute('aria-label', 'Search and commands')
+    expect(screen.getByTestId('sidebar-toggle').getAttribute('title')).toBe('Collapse sidebar')
+    expect(screen.getByTestId('nav-pets').getAttribute('title')).toBeNull()
+    await waitFor(() =>
+      expect(screen.getByTestId('nav-profile')).toHaveAttribute(
+        'aria-label',
+        'Profile — Test Owner',
+      ),
+    )
   })
 
-  it('plain N outside a field is the documented create alias', async () => {
+  it('gives the header and content one shared gutter with no centred width cap', async () => {
     renderApp('/pets')
     await waitForShell()
 
-    act(() => {
-      fireEvent.keyDown(window, { key: 'n' })
-    })
-    expect(await screen.findByTestId('pet-form')).toBeInTheDocument()
+    const headerInner = screen.getByTestId('app-header').firstElementChild as HTMLElement
+    const content = screen.getByTestId('app-content')
+
+    for (const element of [headerInner, content]) {
+      expect(element.className).toContain('px-[var(--page-gutter)]')
+      expect(element.className).not.toMatch(/\bmx-auto\b/)
+      expect(element.className).not.toContain('max-w-')
+      expect(element.className).not.toContain('content-max')
+    }
+    // The rail toggle lives in the sidebar's brand row, so the header starts
+    // with the page title and lines up with the cards below.
+    expect(screen.queryByTestId('sidebar-toggle')).toBeInTheDocument()
+    expect(headerInner.contains(screen.getByTestId('sidebar-toggle'))).toBe(false)
+    expect(headerInner.firstElementChild).toBe(screen.getByTestId('page-title').parentElement)
   })
 })

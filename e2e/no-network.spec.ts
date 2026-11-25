@@ -27,9 +27,10 @@ test('the app is local-only: no external requests, webfonts, media, service work
     await page.getByTestId('page-title').waitFor()
   }
 
-  // A palette open pulls its lazy chunk from this origin only.
+  // A palette open (from the header Search button) pulls its lazy chunk from
+  // this origin only.
   await openApp(page, '/')
-  await page.keyboard.press('Meta+k')
+  await page.getByTestId('header-search').click()
   await expect(page.getByTestId('command-palette')).toBeVisible()
   await page.keyboard.press('Escape')
 

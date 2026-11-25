@@ -63,8 +63,8 @@ export function VaccinationsPage() {
     petId: null,
   })
 
-  // ⌘N / the palette's "Add vaccination" command (F4 create intent), prefilled
-  // from the pet filter the command carried.
+  // The palette's "Add vaccination" create command lands here (?new=1),
+  // prefilled from the pet filter the command carried.
   useCreateIntent(
     () => setDialog({ open: true, petId: search.petId }),
     state.kind === 'ready' && (state.data.pets.length > 0 || search.petId !== null),

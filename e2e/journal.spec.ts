@@ -154,9 +154,7 @@ test.describe('journal', () => {
     await expect(page.getByTestId('pet-not-found')).toBeVisible()
   })
 
-  test('offers exactly one Log entry action, shared by the header, ?new=1 and the N shortcut', async ({
-    page,
-  }) => {
+  test('offers exactly one Log entry action, shared by the header and ?new=1', async ({ page }) => {
     // The header slot keeps the single primary action at every width; the filter
     // toolbar is filters + search + count only (t12).
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -190,11 +188,6 @@ test.describe('journal', () => {
     await expect(page.getByTestId('journal-editor')).toHaveAttribute('data-mode', 'sheet')
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('journal-editor')).toHaveCount(0)
-
-    // Plain N is the documented ⌘N fallback and routes through the same intent.
-    await page.keyboard.press('n')
-    await expect(page.getByTestId('journal-editor')).toHaveAttribute('data-mode', 'sheet')
-    await expect(page).not.toHaveURL(/new=1/)
   })
 })
 

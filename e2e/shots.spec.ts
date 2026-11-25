@@ -19,6 +19,8 @@
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 
+import type { Page } from '@playwright/test'
+
 import { localDateISO, minutesFromNow, openApp } from './support/app'
 import { expect, test } from './support/fixtures'
 import { seedHousehold, type SeedPet } from './support/household'
@@ -72,7 +74,7 @@ const SIZES =
     ? ALL_SIZES
     : ALL_SIZES.filter((size) => SIZE_FILTER.includes(size.width))
 
-test('real screens at 1440, 1024 and the 72 px rail @shots', async ({ page }) => {
+async function seedDemo(page: Page): Promise<void> {
   await seedHousehold(page, {
     pets: [BELLA, MISO, COCO],
     vaccinations: [
@@ -144,6 +146,10 @@ test('real screens at 1440, 1024 and the 72 px rail @shots', async ({ page }) =>
       },
     ],
   })
+}
+
+test('real screens at 1440, 1024 and the 72 px rail @shots', async ({ page }) => {
+  await seedDemo(page)
 
   for (const size of SIZES) {
     await page.setViewportSize({ width: size.width, height: size.height })
@@ -162,6 +168,32 @@ test('real screens at 1440, 1024 and the 72 px rail @shots', async ({ page }) =>
       await page.waitForTimeout(250)
       await page.screenshot({
         path: path.join(SHOTS_DIR, `${GATE_LABEL}-${size.width}-${name}.png`),
+        animations: 'disabled',
+      })
+    }
+  }
+})
+
+test('full-width edge screenshots at 1440 and 1024 @shots', async ({ page }) => {
+  await seedDemo(page)
+
+  const edgeSizes = [
+    { width: 1440, height: 900 },
+    { width: 1024, height: 768 },
+  ] as const
+
+  for (const size of edgeSizes) {
+    await page.setViewportSize({ width: size.width, height: size.height })
+    for (const [name, route, readyTestId] of ALL_ROUTES) {
+      await openApp(page, route)
+      await page
+        .getByTestId(readyTestId)
+        .or(page.getByTestId(`${name}-empty`))
+        .first()
+        .waitFor()
+      await page.waitForTimeout(250)
+      await page.screenshot({
+        path: path.join(SHOTS_DIR, `edge-${size.width}-${name}.png`),
         animations: 'disabled',
       })
     }

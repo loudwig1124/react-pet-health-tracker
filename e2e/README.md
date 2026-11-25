@@ -30,21 +30,24 @@ inside the repo (`PLAYWRIGHT_BROWSERS_PATH=0`) because the sandbox cannot write 
 
 ## Files
 
-| File                     | Milestone  | What it proves                                                                                                              |
-| ------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `support/app.ts`         | —          | navigation/readiness, no-sideways-overflow, local dates, raw IndexedDB fixture writes/reads, transform/opacity motion probe |
-| `support/fixtures.ts`    | —          | auto **console-error guard**: any `console.error` or `pageerror` fails the test and attaches the text                       |
-| `shell.spec.ts`          | M1         | boot at 1440/1024, deep links + reload, mouse nav, ⌘1–6/⌘B/⌘,, live resize, focus ring, `/settings` 404                     |
-| `resize.spec.ts`         | M1 → M5    | live resize on dashboard / tables / journal / pet detail; rail, avatar-only footer, editor → Sheet, no overflow             |
-| `reduced-motion.spec.ts` | M1 → M5    | `prefers-reduced-motion: reduce`: no transform/opacity motion > 80 ms, motion-only information parity                       |
-| `perf.spec.ts`           | M5         | LCP ≤ 1.5 s, DOM ≤ 1,200, route swap ≤ 100 ms, no long task > 50 ms                                                         |
-| `shots.spec.ts`          | every gate | real app at 1440 / 1024 / 72 px rail into `docs/build/shots/`                                                               |
-| `pets.spec.ts`           | M2         | pet create → edit → delete, validation, records append-only, sort/filter survive reload                                     |
-| `schedule.spec.ts`       | M3         | vaccination newest-dose clears overdue, booking + complete/cancel/no-show, URL state, calendar lazy chunk                   |
-| `journal.spec.ts`        | M4         | journal create/edit/delete, undo window, day grouping, filters survive reload, editor mode                                  |
-| `preferences.spec.ts`    | M4         | owner, due-soon window, kg↔lb, density, sample data toggle, reset + first run                                               |
-| `two-tab.spec.ts`        | M4         | a write in one tab appears in a mounted list in the second tab without refresh                                              |
-| `dashboard.spec.ts`      | M5         | counters vs rules, overdue drill-down, sidebar badges, ⌘K palette, ⌘N/?, shortcuts                                          |
+| File                     | Milestone  | What it proves                                                                                                                                             |
+| ------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `support/app.ts`         | —          | navigation/readiness, no-sideways-overflow, local dates, raw IndexedDB fixture writes/reads, transform/opacity motion probe                                |
+| `support/fixtures.ts`    | —          | auto **console-error guard**: any `console.error` or `pageerror` fails the test and attaches the text                                                      |
+| `shell.spec.ts`          | M1         | boot at 1440/1024, deep links + reload, mouse nav, rail toggle/Profile footer by click, live resize, dialog focus ring, `/settings` 404                    |
+| `resize.spec.ts`         | M1 → M5    | live resize on dashboard / tables / journal / pet detail; rail, avatar-only footer, editor → Sheet, no overflow                                            |
+| `layout.spec.ts`         | t14        | full-width layout: toggle flush to the sidebar, title/cards share the 24 px gutter, no centred dead margins, no overflow at 1440/1280/1024                 |
+| `no-shortcuts.spec.ts`   | t14        | the former global shortcuts are inert (no palette/sheet/navigation/rail change, no console error) on the dashboard and a table route                       |
+| `no-network.spec.ts`     | final      | local-only runtime audit: no external requests, webfonts, media, service worker, cookies or foreign storage                                                |
+| `reduced-motion.spec.ts` | M1 → M5    | `prefers-reduced-motion: reduce`: no transform/opacity motion > 80 ms, motion-only information parity                                                      |
+| `perf.spec.ts`           | M5         | LCP ≤ 1.5 s, DOM ≤ 1,200, route swap ≤ 100 ms, no long task > 50 ms                                                                                        |
+| `shots.spec.ts`          | every gate | real app at 1440 / 1024 / 72 px rail into `docs/build/shots/`                                                                                              |
+| `pets.spec.ts`           | M2         | pet create → edit → delete, validation, records append-only, sort/filter survive reload                                                                    |
+| `schedule.spec.ts`       | M3         | vaccination newest-dose clears overdue, booking + complete/cancel/no-show, URL state, calendar lazy chunk                                                  |
+| `journal.spec.ts`        | M4         | journal create/edit/delete, undo window, day grouping, filters survive reload, editor mode                                                                 |
+| `preferences.spec.ts`    | M4         | owner, due-soon window, kg↔lb, density, sample data toggle, reset + first run                                                                              |
+| `two-tab.spec.ts`        | M4         | a write in one tab appears in a mounted list in the second tab without refresh                                                                             |
+| `dashboard.spec.ts`      | M5         | counters vs rules, overdue drill-down, sidebar badges, palette from the header Search button, every create command, arrows/Enter/Escape inside the palette |
 
 ## Conventions
 
@@ -54,6 +57,11 @@ inside the repo (`PLAYWRIGHT_BROWSERS_PATH=0`) because the sandbox cannot write 
   `src/lib/db/db.ts`.
 - **No `test.skip`/`fixme` without a written reason** in the same file. Prefer a failing assertion over
   a silent skip: a red gate is a finding, a skipped gate is a lie.
+- **Mouse-only proof**: no spec presses a global shortcut. Navigation, create, palette opening
+  (`header-search`), rail toggling (`sidebar-toggle`) and Profile are clicks; the only keyboard use is
+  inside a widget (typing, Tab/Enter in dialogs, palette arrows/Enter/Escape, table rows). The single
+  exception is `no-shortcuts.spec.ts`, which deliberately presses every former shortcut to prove it is
+  inert.
 - **Selectors**: accessible roles and names first (`getByRole('button', { name: /add pet/i })`),
   `data-testid` for containers and rows. The stable hooks are requested from each milestone owner; if
   the UI has to change, change the selector in one place.

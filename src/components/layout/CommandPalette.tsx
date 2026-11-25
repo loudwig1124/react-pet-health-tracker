@@ -9,8 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Kbd } from '@/components/ui/kbd'
-import type { CommandPaletteSection } from '@/lib/desktop/events'
 import { usePaletteItems } from '@/lib/hooks/usePaletteItems'
 import {
   createCommandPaletteItems,
@@ -30,13 +28,11 @@ interface PaletteSection {
 }
 
 export interface CommandPaletteProps {
-  /** ⌘N on `/` opens the palette with only the create commands showing. */
-  initialSection?: CommandPaletteSection
   onClose: () => void
 }
 
 /**
- * F3 — the ⌘K command palette.
+ * The command palette, opened by the header Search button.
  *
  * Mounted only on demand from its own lazy chunk (the shell dispatches
  * `pet-health:command-palette`; no palette code is in the first-load budget).
@@ -44,12 +40,12 @@ export interface CommandPaletteProps {
  * visits, and runs every create command — the exact same `?new=1` URLs the
  * screens' own primary buttons use.
  *
- * Keyboard contract: the input is a combobox with `aria-activedescendant`; the
- * results list never takes focus, so ↑/↓, Home/End, Enter and Esc are enough
- * (05 F4 "keyboard-only usable"). The radix Dialog supplies the focus trap and
- * restores focus to the trigger on close.
+ * The app has no keyboard shortcuts: the palette is a normal search dialog, so
+ * its inner combobox/listbox keeps standard dialog interaction (the radix
+ * Dialog supplies the focus trap and restores focus on close), but nothing
+ * global listens for keys and no key hints are advertised.
  */
-export function CommandPalette({ initialSection, onClose }: CommandPaletteProps) {
+export function CommandPalette({ onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
   const items = usePaletteItems()
   const [query, setQuery] = useState('')
@@ -69,9 +65,6 @@ export function CommandPalette({ initialSection, onClose }: CommandPaletteProps)
         (group) => ({ key: group.group, label: group.label, items: group.items }),
       )
     }
-    if (initialSection === 'create') {
-      return [{ key: 'create', label: 'Create', items: createCommandPaletteItems() }]
-    }
     if (items === undefined) {
       return []
     }
@@ -89,7 +82,7 @@ export function CommandPalette({ initialSection, onClose }: CommandPaletteProps)
     return recents.length === 0
       ? groups
       : [{ key: 'recent', label: 'Recent', items: recents }, ...groups]
-  }, [initialSection, items, query, recentsIds])
+  }, [items, query, recentsIds])
 
   const visible = useMemo(() => sections.flatMap((section) => section.items), [sections])
   const active = visible.length === 0 ? -1 : Math.min(activeIndex, visible.length - 1)
@@ -196,7 +189,6 @@ export function CommandPalette({ initialSection, onClose }: CommandPaletteProps)
             onKeyDown={onKeyDown}
             className="text-body placeholder:text-muted-foreground h-11 w-full min-w-0 bg-transparent outline-none"
           />
-          <Kbd className="text-caption hidden shrink-0 sm:inline-flex">Esc</Kbd>
         </div>
 
         <div
@@ -249,9 +241,6 @@ export function CommandPalette({ initialSection, onClose }: CommandPaletteProps)
                         {item.description}
                       </span>
                     </span>
-                    {index === active ? (
-                      <span className="text-caption text-muted-foreground shrink-0">↵</span>
-                    ) : null}
                   </div>
                 )
               })}
@@ -265,21 +254,10 @@ export function CommandPalette({ initialSection, onClose }: CommandPaletteProps)
           ) : null}
         </div>
 
-        <div className="border-border text-caption text-muted-foreground flex flex-wrap items-center gap-3 border-t px-3 py-2">
-          <span className="inline-flex items-center gap-1">
-            <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd>
-            move
+        <div className="border-border text-caption text-muted-foreground flex items-center border-t px-3 py-2">
+          <span className="ml-auto tabular-nums">
+            {visible.length} {visible.length === 1 ? 'result' : 'results'}
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Kbd>↵</Kbd>
-            open
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Kbd>Esc</Kbd>
-            close
-          </span>
-          <span className="ml-auto">{visible.length} results</span>
         </div>
       </DialogContent>
     </Dialog>

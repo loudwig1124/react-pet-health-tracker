@@ -91,14 +91,13 @@ src/
 │   ├── router.tsx               # shell + lazy children, DB boot loader, handles, 404
 │   ├── providers.tsx            # TooltipProvider (400 ms)
 │   ├── hydrate-fallback.tsx     # first-paint skeleton matching the shell
-│   ├── error-boundary.tsx       # blocking storage-failure screen
-│   └── shell-shortcuts.ts       # ⌘1–6 / ⌘B / ⌘, / ⌘K reserved event
+│   └── error-boundary.tsx       # blocking storage-failure screen
 ├── components/
 │   ├── layout/                  # AppShell, AppSidebar, AppHeader, PageSkeleton
 │   └── ui/                      # owned shadcn source (button, avatar, tooltip, …)
 │       └── magicui/             # Progressive Blur (static CSS stack)
 ├── lib/
-│   ├── shell.ts                 # destinations, collapse rule, shortcut matcher (pure)
+│   ├── shell.ts                 # destinations, collapse rule (pure)
 │   ├── hooks/                   # useSidebar, useOwner
 │   ├── db/                      # db.ts, schema.ts, settings.ts, boot.ts,
 │   │   ├── repositories/        #   one repository per entity + household
@@ -109,7 +108,8 @@ src/
 ```
 
 The shell: 240 px sidebar / 72 px rail (forced below 1024, expandable on demand 1024–1279),
-64/56 px sticky header, 1200/1440 px content maxima, one scroll container, six destinations with
+64/56 px sticky header, full-width content (one 24/16 px gutter, no centred cap), one scroll container,
+the rail toggle in the sidebar's brand row, six destinations with
 Lucide icons and a pinned Profile footer (avatar only in the rail). Settings lives inside Profile;
 there is no `/settings` route. Route chunks are lazy; the size gate enforces the split.
 

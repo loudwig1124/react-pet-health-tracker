@@ -165,7 +165,7 @@ export function JournalPage() {
     setSheetOpen(true)
   }
 
-  // ⌘N / the palette's "Log entry" command (F4 create intent).
+  // The palette's "Log entry" create command lands here (?new=1).
   useCreateIntent(startCreate, data !== undefined && pets.length > 0)
 
   function handleSheetOpenChange(open: boolean): void {
