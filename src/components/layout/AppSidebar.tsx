@@ -91,41 +91,65 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
           rail ? 'justify-center px-0' : 'justify-between gap-2 px-3',
         )}
       >
-        <Link
-          to="/"
-          aria-label="Pet Health Tracker — Dashboard"
-          data-testid="sidebar-brand"
-          className="focus-visible:ring-sidebar-ring flex min-w-0 items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <span className="bg-accent-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
-            <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
-          </span>
-          {rail ? null : (
-            <span className="text-small truncate font-semibold tracking-tight">
-              Pet Health Tracker
+        {rail ? (
+          /*
+           * Collapsed: the paw *is* the button. Two controls in a 72 px rail
+           * read as clutter, and the logo is the most obvious thing to click to
+           * bring the sidebar back. When the rail is forced (<1024) there is
+           * nothing to expand to, so the mark stays decorative.
+           */
+          showToggle ? (
+            <button
+              type="button"
+              aria-label="Expand sidebar"
+              aria-pressed={open}
+              title="Expand sidebar"
+              onClick={onToggle}
+              data-testid="sidebar-toggle"
+              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-10 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <span className="bg-accent-soft text-primary flex size-8 items-center justify-center rounded-lg">
+                <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
+              </span>
+            </button>
+          ) : (
+            <span
+              aria-hidden="true"
+              data-testid="sidebar-brand"
+              className="bg-accent-soft text-primary flex size-8 items-center justify-center rounded-lg"
+            >
+              <PawPrint className="size-4" strokeWidth={2.25} />
             </span>
-          )}
-        </Link>
+          )
+        ) : (
+          <>
+            <Link
+              to="/"
+              aria-label="Pet Health Tracker — Dashboard"
+              data-testid="sidebar-brand"
+              className="focus-visible:ring-sidebar-ring flex min-w-0 items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <span className="bg-accent-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
+                <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
+              </span>
+              <span className="text-small truncate font-semibold tracking-tight">
+                Pet Health Tracker
+              </span>
+            </Link>
 
-        {/*
-         * The rail toggle lives here, not in the page header: the header then
-         * holds only the title, which lines up with the cards, and the button
-         * gets real air on both sides instead of being wedged between the
-         * sidebar edge and the title.
-         */}
-        {showToggle ? (
-          <button
-            type="button"
-            aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
-            aria-pressed={open}
-            title={open ? 'Collapse sidebar' : 'Expand sidebar'}
-            onClick={onToggle}
-            data-testid="sidebar-toggle"
-            className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
-          >
-            <PanelLeft aria-hidden="true" className="size-4" />
-          </button>
-        ) : null}
+            <button
+              type="button"
+              aria-label="Collapse sidebar"
+              aria-pressed={open}
+              title="Collapse sidebar"
+              onClick={onToggle}
+              data-testid="sidebar-toggle"
+              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <PanelLeft aria-hidden="true" className="size-4" />
+            </button>
+          </>
+        )}
       </div>
 
       <nav
