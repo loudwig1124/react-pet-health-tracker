@@ -155,83 +155,74 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
         className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4"
         aria-label="Primary"
       >
-        {(
-          [
-            { key: 'overview', label: 'Overview', items: APP_DESTINATIONS.slice(0, 1) },
-            { key: 'household', label: 'Household', items: APP_DESTINATIONS.slice(1) },
-          ] as const
-        ).map((group) => (
-          <div key={group.key} className="flex flex-col gap-1">
-            {rail ? (
-              <span className="sr-only">{group.label}</span>
-            ) : (
-              <p className="text-overline text-muted-foreground px-2 pb-1">{group.label}</p>
-            )}
-            <ul className="flex flex-col gap-0.5">
-              {group.items.map((item) => {
-                const Icon = NAV_ICONS[item.key]
-                const active = isDestinationActive(pathname, item.path)
-                const badgeKind =
-                  item.key === 'vaccinations'
-                    ? ('vaccinations' as const)
-                    : item.key === 'appointments'
-                      ? ('appointments' as const)
-                      : null
-                const link = (
-                  <Link
-                    to={item.path}
-                    aria-current={active ? 'page' : undefined}
-                    data-testid={`nav-${item.key}`}
-                    data-active={active}
-                    className={cn(
-                      'app-nav-item group flex h-9 items-center gap-2.5 rounded-md px-2 text-small text-sidebar-foreground/85',
-                      'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
-                      'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                      'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
-                      rail && 'mx-auto h-10 w-10 justify-center px-0',
-                      active && 'text-sidebar-accent-foreground',
-                    )}
-                  >
-                    <Icon aria-hidden="true" className="app-nav-icon size-4 shrink-0" />
-                    {rail ? (
-                      badgeKind === null ? null : (
+        {/*
+         * One flat list: the previous Overview / Household group labels added
+         * two lines of chrome to a six-item rail without telling the reader
+         * anything the labels themselves did not repeat.
+         */}
+        <ul className="flex flex-col gap-1">
+          {APP_DESTINATIONS.map((item) => {
+            const Icon = NAV_ICONS[item.key]
+            const active = isDestinationActive(pathname, item.path)
+            const badgeKind =
+              item.key === 'vaccinations'
+                ? ('vaccinations' as const)
+                : item.key === 'appointments'
+                  ? ('appointments' as const)
+                  : null
+            const link = (
+              <Link
+                to={item.path}
+                aria-current={active ? 'page' : undefined}
+                data-testid={`nav-${item.key}`}
+                data-active={active}
+                className={cn(
+                  'app-nav-item group flex h-9 items-center gap-2.5 rounded-md px-2 text-small text-sidebar-foreground/85',
+                  'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
+                  'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                  'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
+                  rail && 'mx-auto h-10 w-10 justify-center px-0',
+                  active && 'text-sidebar-accent-foreground',
+                )}
+              >
+                <Icon aria-hidden="true" className="app-nav-icon size-4 shrink-0" />
+                {rail ? (
+                  badgeKind === null ? null : (
+                    <Suspense fallback={null}>
+                      <SidebarAttentionBadge kind={badgeKind} rail />
+                    </Suspense>
+                  )
+                ) : (
+                  <>
+                    <span className="truncate">{item.label}</span>
+                    {badgeKind === null ? null : (
+                      <span className="ml-auto flex shrink-0 items-center">
                         <Suspense fallback={null}>
-                          <SidebarAttentionBadge kind={badgeKind} rail />
+                          <SidebarAttentionBadge kind={badgeKind} />
                         </Suspense>
-                      )
-                    ) : (
-                      <>
-                        <span className="truncate">{item.label}</span>
-                        {badgeKind === null ? null : (
-                          <span className="ml-auto flex shrink-0 items-center">
-                            <Suspense fallback={null}>
-                              <SidebarAttentionBadge kind={badgeKind} />
-                            </Suspense>
-                          </span>
-                        )}
-                      </>
+                      </span>
                     )}
-                  </Link>
-                )
+                  </>
+                )}
+              </Link>
+            )
 
-                return (
-                  <li key={item.key}>
-                    {rail ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>{link}</TooltipTrigger>
-                        <TooltipContent side="right" align="center">
-                          {item.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      link
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        ))}
+            return (
+              <li key={item.key}>
+                {rail ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" align="center">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  link
+                )}
+              </li>
+            )
+          })}
+        </ul>
       </nav>
 
       {/* A plain hairline keeps radix Separator out of the eager shell (size gate). */}
