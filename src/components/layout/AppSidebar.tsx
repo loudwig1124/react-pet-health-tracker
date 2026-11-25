@@ -93,10 +93,11 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       >
         {rail ? (
           /*
-           * Collapsed: the paw *is* the button. Two controls in a 72 px rail
-           * read as clutter, and the logo is the most obvious thing to click to
-           * bring the sidebar back. When the rail is forced (<1024) there is
-           * nothing to expand to, so the mark stays decorative.
+           * Collapsed: one control, and it is the expand icon rather than the
+           * brand. The paw keeps its meaning (a link home) wherever it is
+           * visible, and a 72 px rail cannot hold a brand and a button without
+           * the two crowding each other. Where the rail is forced (<1024) there
+           * is nothing to expand, so the paw is shown as a static mark.
            */
           showToggle ? (
             <button
@@ -108,9 +109,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
               data-testid="sidebar-toggle"
               className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-10 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
             >
-              <span className="bg-accent-soft text-primary flex size-8 items-center justify-center rounded-lg">
-                <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
-              </span>
+              <PanelLeft aria-hidden="true" className="size-4" />
             </button>
           ) : (
             <span
