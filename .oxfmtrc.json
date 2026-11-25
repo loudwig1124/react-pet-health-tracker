@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100,
+  "sortImports": true,
+  "sortTailwindcss": true,
+  "ignorePatterns": [
+    "dist/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "docs/**",
+    "src/components/ui/**"
+  ]
+}

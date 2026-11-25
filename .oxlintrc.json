@@ -1,0 +1,55 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": [
+      "warn",
+      {
+        "allowConstantExport": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/components/ui/**"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": ["src/lib/rules/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": ["react", "react-dom", "react-router", "dexie", "dexie-react-hooks"],
+            "patterns": ["@/lib/db/**", "@/components/**", "@/app/**", "@/routes/**"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/components/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": ["@/lib/db/**", "@/routes/**"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/app/**", "src/routes/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": ["radix-ui", "cmdk", "sonner", "react-day-picker", "recharts", "motion"]
+          }
+        ]
+      }
+    }
+  ]
+}

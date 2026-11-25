@@ -1,0 +1,195 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import './styles/tokens.css';
+
+/*
+ * Light theme only in v1 (04 §1.1). The `dark` variant is kept defined because
+ * several vendored shadcn primitives carry `dark:` classes; the app never adds
+ * the class, so those branches stay inert.
+ */
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    height: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100%;
+    margin: 0;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    height: 100%;
+  }
+
+  /* Visible focus is a keyboard-first requirement (03 §1, F4). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  /*
+   * The single scroll container of the shell (03 §1). `scrollbar-gutter`
+   * stops the content from shifting when a route grows taller than the pane.
+   */
+  .app-scroll {
+    overflow-y: auto;
+    overflow-x: clip;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * Sidebar motion is CSS only (03 §2, 04 §3b): 70 % opacity at rest,
+   * 100 % + scale(1.06) + 1 px lift on hover in 120 ms. The active state never
+   * depends on the icon alone — the row keeps its accent pill and soft fill.
+   */
+  .app-nav-icon {
+    opacity: 0.7;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity var(--dur-fast) var(--ease-standard),
+      transform var(--dur-fast) var(--ease-standard);
+    will-change: auto;
+  }
+
+  .app-nav-item:hover .app-nav-icon,
+  .app-nav-item:focus-visible .app-nav-icon {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.06);
+  }
+
+  .app-nav-item {
+    position: relative;
+  }
+
+  .app-nav-item[data-active='true']::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 16px;
+    border-radius: var(--radius-avatar);
+    background: var(--primary);
+    content: '';
+    transform: translateY(-50%);
+  }
+
+  .app-nav-item[data-active='true'] {
+    background: var(--sidebar-accent);
+    color: var(--ink);
+  }
+
+  /*
+   * Sticky identity columns (`StickyTable`). The pinned cell paints the table's
+   * own surface — paper for the borderless pets/records tables, card inside the
+   * card-wrapped schedule tables — so it is invisible at rest. The soft right
+   * edge is applied only while the table reports a horizontal scroll offset, so
+   * a table that fits (the common desktop case) shows no seam at all.
+   */
+  .table-sticky-identity {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: var(--table-sticky-surface, var(--background));
+  }
+
+  [data-sticky-scrolled='true'] .table-sticky-identity {
+    box-shadow:
+      inset -1px 0 0 var(--hairline),
+      6px 0 12px -6px color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+
+  /* Route change: 80 ms out → 200 ms in (03 §4). Transform/opacity only. */
+  .app-page {
+    animation: app-page-in var(--dur-page-in) var(--ease-standard);
+  }
+
+  @keyframes app-page-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /*
+   * Magic UI Animated List fallback (04 §3): one appended row fades in and
+   * rises 6 px over 180 ms; the stagger delay is set inline by the component.
+   * Reduced motion below collapses the animation globally.
+   */
+  .magicui-fade-rise {
+    animation: magicui-fade-rise 180ms var(--ease-standard) both;
+  }
+
+  @keyframes magicui-fade-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/*
+ * Reduced motion: instant or ≤80 ms opacity swaps, no slides/scales/stagger,
+ * static skeletons, no smooth scrolling (03 §4, 04 §1.4).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .app-nav-icon,
+  .app-nav-item:hover .app-nav-icon,
+  .app-nav-item:focus-visible .app-nav-icon {
+    transform: none !important;
+    opacity: 1;
+  }
+
+  .app-page {
+    animation: none;
+    opacity: 1;
+  }
+}

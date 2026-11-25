@@ -1,0 +1,247 @@
+/*
+ * Design tokens — the ONLY file in the app with literal colour values (04 §1).
+ *
+ * Flutter AppColors/AppRadii/AppTextStyles are mapped onto shadcn's CSS
+ * variables here; every component consumes semantic utilities (bg-card,
+ * text-muted-foreground, border-border) or the status utilities, never a hex.
+ *
+ * Naming note (04 §1): the Flutter "accent" (#0E6B5F) is the brand PRIMARY,
+ * not shadcn's `--accent` (a hover surface). The Flutter "secondary" (#6B6660)
+ * is body text, not shadcn's `--secondary` button.
+ *
+ * Light theme only in v1 (`color-scheme: light`, 04 §1.1).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------------------------------------------------------------------
+   * 1. Brand palette (Flutter AppColors)
+   * ------------------------------------------------------------------ */
+  --paper: #faf8f5;
+  --surface: #ffffff;
+  --paper-raised: #f5f1eb;
+  --ink: #1b1a18;
+  --secondary-text: #6b6660;
+  --hairline: #ece7e1;
+  --brand-accent: #0e6b5f;
+  --accent-soft: #e7f0ef;
+
+  /* Status pairs: colour + soft tint. Never colour-only (WCAG 1.4.1). */
+  --status-overdue: #b3261e;
+  --status-overdue-soft: #fcebea;
+  --status-due-soon: #a16000;
+  --status-due-soon-soft: #fdf3e3;
+  --status-up-to-date: #2f6b3f;
+  --status-up-to-date-soft: #eaf3ec;
+  --status-neutral: #6b6660;
+
+  /* ---------------------------------------------------------------------
+   * 2. shadcn slots + semantic aliases
+   * ------------------------------------------------------------------ */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand-accent);
+  --primary-foreground: var(--surface);
+  --secondary: var(--paper-raised);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-raised);
+  --muted-foreground: var(--secondary-text);
+  --accent: var(--paper-raised);
+  --accent-foreground: var(--ink);
+  --destructive: var(--status-overdue);
+  --destructive-foreground: var(--surface);
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--brand-accent);
+
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand-accent);
+  --sidebar-primary-foreground: var(--surface);
+  --sidebar-accent: var(--accent-soft);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--brand-accent);
+
+  /* ---------------------------------------------------------------------
+   * 3. Radii (04 §1.2)
+   * ------------------------------------------------------------------ */
+  --radius: 10px; /* controls */
+  --radius-card: 16px;
+  --radius-panel: 20px;
+  --radius-chip: 10px;
+  --radius-avatar: 9999px;
+
+  /* ---------------------------------------------------------------------
+   * 4. Spacing / layout (4-based; shell metrics from 03 §1)
+   * ------------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --section-gap: 24px;
+  --card-padding: 16px;
+  --card-gap: 16px;
+
+  --sidebar-width: 240px;
+  --sidebar-width-rail: 72px;
+  --rail-tile: 40px;
+  --nav-row: 36px;
+  --nav-row-compact: 32px;
+  --header-height: 64px;
+  --header-height-compact: 56px;
+  --content-max-narrow: 1200px;
+  --content-max-wide: 1440px;
+  --page-gutter: 32px;
+
+  /* ---------------------------------------------------------------------
+   * 5. Type scale and font (04 §1.3) — system stack, no webfont
+   * ------------------------------------------------------------------ */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+
+  /* ---------------------------------------------------------------------
+   * 6. Motion (04 §1.4) — durations are tokens, never component magic numbers
+   * ------------------------------------------------------------------ */
+  --dur-press: 90ms;
+  --dur-fast: 120ms;
+  --dur-dialog: 160ms;
+  --dur-page-in: 200ms;
+  --dur-out: 80ms;
+  --dur-sheet: 240ms;
+  --dur-detail: 320ms;
+  --dur-back: 340ms;
+  --dur-sidebar: 180ms;
+  --dur-label: 80ms;
+
+  /*
+   * Table/feed density (comfortable default; compact is applied by
+   * `data-density="compact"` from the persisted setting in M4).
+   */
+  --row-height: 44px;
+  --feed-row-height: 64px;
+  --control-height: 36px;
+}
+
+@media (max-width: 1439px) {
+  :root {
+    --page-gutter: 24px;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --page-gutter: 16px;
+    --header-height: var(--header-height-compact);
+  }
+}
+
+/* Compact density changes spacing only, never type size (03 §6). */
+:root[data-density='compact'] {
+  --row-height: 36px;
+  --feed-row-height: 52px;
+  --control-height: 32px;
+  --nav-row: 32px;
+  --section-gap: 24px;
+  --card-padding: 12px;
+}
+
+/*
+ * Tailwind v4 theme bridge: expose the tokens above as utilities
+ * (bg-background, text-muted-foreground, border-border, rounded-lg,
+ * text-title, ease-standard, status colours, …).
+ */
+@theme inline {
+  /* --font-sans lives in :root (single system stack); utilities read it. */
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Status pairs (04 §1.1) */
+  --color-status-overdue: var(--status-overdue);
+  --color-status-overdue-soft: var(--status-overdue-soft);
+  --color-status-due-soon: var(--status-due-soon);
+  --color-status-due-soon-soft: var(--status-due-soon-soft);
+  --color-status-up-to-date: var(--status-up-to-date);
+  --color-status-up-to-date-soft: var(--status-up-to-date-soft);
+  --color-status-neutral: var(--status-neutral);
+
+  /* Radii: controls 10, card 16, panel 20 (04 §1.2) */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-panel);
+  --radius-3xl: calc(var(--radius-panel) + 4px);
+
+  /* Type scale (04 §1.3) */
+  --text-display: 36px;
+  --text-display--line-height: 42px;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 24px;
+  --text-title--line-height: 30px;
+  --text-title--font-weight: 600;
+  --text-title--letter-spacing: -0.01em;
+  --text-heading: 17px;
+  --text-heading--line-height: 24px;
+  --text-heading--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--font-weight: 400;
+  --text-small: 13px;
+  --text-small--line-height: 18px;
+  --text-small--font-weight: 400;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 400;
+  --text-overline: 11px;
+  --text-overline--line-height: 14px;
+  --text-overline--font-weight: 700;
+  --text-overline--letter-spacing: 0.14em;
+  --text-stat: 28px;
+  --text-stat--line-height: 32px;
+  --text-stat--font-weight: 700;
+  --text-stat--letter-spacing: -0.01em;
+
+  /* Motion easings (durations stay plain custom properties in :root) */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-detail: cubic-bezier(0.33, 1, 0.68, 1);
+}
