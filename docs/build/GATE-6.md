@@ -8,7 +8,8 @@
 | Date | 2026-11-25 14:22–14:28 (Asia/Manila) |
 | Evidence log | [`evidence/gate-6.log`](./evidence/gate-6.log) · literal acceptance sequence: [`evidence/final-acceptance.log`](./evidence/final-acceptance.log) |
 | Command | `GATE=6 bash scripts/gate.sh` and the task's `pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm exec vitest run && pnpm build && node scripts/check-size.mjs && pnpm e2e` |
-| Supersedes | [`GATE-5.md`](./GATE-5.md) for the final numbers and screenshots (GATE-5 stays as the M5-freeze evidence and as the “before” pictures) |
+| Supersedes | [`GATE-5.md`](./GATE-5.md) for the post-polish numbers and screenshots (GATE-5 stays as the M5-freeze evidence and as the “before” pictures) |
+| Superseded by | [`GATE-7.md`](./GATE-7.md) — the owner removed keyboard shortcuts and widened the layout (t14); GATE-7 is the release-one final gate |
 
 ## 1 · What changed since GATE-5
 

@@ -1,4 +1,4 @@
-import { openApp } from './support/app'
+import { expectNoHorizontalOverflow, openApp } from './support/app'
 /**
  * Full-width layout (t14): the header and content span the whole main column —
  * no centred max-width dead margins — while the header toggle sits flush in the
@@ -44,7 +44,7 @@ async function measureDashboard(page: Parameters<typeof openApp>[0]) {
   })
 }
 
-test('full width at 1440/1280/1024: no overflow, flush toggle, aligned gutter', async ({
+test('full width at 1440/1280/1024: no overflow, toggle inside the sidebar, aligned gutter', async ({
   page,
 }) => {
   await seedHousehold(page, { pets: [LAYOUT_PET] })
@@ -81,15 +81,40 @@ test('full width at 1440/1280/1024: no overflow, flush toggle, aligned gutter', 
     closeTo(m.header.left, m.main.left, `${width}: header starts at the sidebar edge`)
     closeTo(m.header.width, m.main.width, `${width}: header spans the main column`)
 
-    // The toggle sits flush in that gutter; the title and every card share it.
-    closeTo(m.toggle.left, m.main.left, `${width}: toggle flush to the sidebar`)
-    closeTo(m.toggle.right, m.title.left, `${width}: title starts after the toggle`)
+    // The rail toggle lives inside the sidebar's brand row with air on both
+    // sides (owner fix), not squeezed against the main column edge.
+    expect(
+      m.toggle.left - m.sidebar.left,
+      `${width}: toggle air on the left`,
+    ).toBeGreaterThanOrEqual(4)
+    expect(
+      m.sidebar.right - m.toggle.right,
+      `${width}: toggle air on the right`,
+    ).toBeGreaterThanOrEqual(4)
+    // The header no longer hosts the toggle.
+    const toggleInHeader = await page
+      .getByTestId('app-header')
+      .locator('[data-testid="sidebar-toggle"]')
+      .count()
+    expect(toggleInHeader, `${width}: header hosts no toggle`).toBe(0)
+
+    // The title and every card share the 24 px gutter; cards run to the edge.
     closeTo(m.title.left, m.main.left + 24, `${width}: title in the 24px gutter`)
+    closeTo(m.title.left, m.counters.left, `${width}: title aligns with the cards`)
     closeTo(m.counters.left, m.main.left + 24, `${width}: cards in the 24px gutter`)
     closeTo(m.counters.right, m.viewport - 24, `${width}: cards reach viewport - 24`)
     closeTo(m.content.left, m.main.left, `${width}: content starts at the sidebar`)
     closeTo(m.content.right, m.viewport, `${width}: content reaches the viewport edge`)
   }
+})
+
+test('the forced rail (<1024) hides the toggle entirely', async ({ page }) => {
+  await seedHousehold(page, { pets: [LAYOUT_PET] })
+  await page.setViewportSize({ width: 900, height: 800 })
+  await openApp(page, '/')
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
+  await expect(page.getByTestId('sidebar-toggle')).toHaveCount(0)
+  await expectNoHorizontalOverflow(page, 'forced rail @900')
 })
 
 test('tables fill the main column; no centred max-width margin at 1440/1024', async ({ page }) => {
