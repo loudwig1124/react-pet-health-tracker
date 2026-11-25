@@ -108,7 +108,7 @@ Budgets are **gzip, measured on `dist/`**:
 ## 2 · Exact scaffold sequence (run in a later round — nothing here has been run)
 ```bash
 # From the workspace root, a sibling of "Pet Health Tracker".
-cd "/Users/daniel/Documents/Coding Projects/School/School Project (AppDev)"
+cd "/path/to/your/workspace"        # the folder that contains pet-health-react/
 
 # 1. Vite template. pet-health-react/ already holds docs/plan/, and create-vite refuses a
 #    non-empty dir — scaffold beside it and merge, keeping the plan docs intact.

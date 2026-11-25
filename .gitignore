@@ -26,3 +26,6 @@ blob-report
 *.njsproj
 *.sln
 *.sw?
+
+# Local toolchain policy (pnpm store kept beside the project on this machine)
+.npmrc
