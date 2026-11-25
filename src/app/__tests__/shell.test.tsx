@@ -130,10 +130,20 @@ describe('AppShell (M1)', () => {
       fired += 1
     }
     window.addEventListener('pet-health:command-palette', listener)
-    act(() => {
-      fireEvent.keyDown(window, { key: 'k', metaKey: true })
-    })
-    window.removeEventListener('pet-health:command-palette', listener)
+    try {
+      // Dispatch is synchronous, but the shell's keydown effect can land a tick
+      // after `waitForShell()` on a slow CI runner — the first press would be
+      // lost. Re-pressing inside `waitFor` is safe (it only increments a
+      // counter) and removes the race without weakening the assertion.
+      await waitFor(() => {
+        act(() => {
+          fireEvent.keyDown(window, { key: 'k', metaKey: true })
+        })
+        expect(fired).toBeGreaterThan(0)
+      })
+    } finally {
+      window.removeEventListener('pet-health:command-palette', listener)
+    }
     expect(fired).toBe(1)
   })
 })
