@@ -229,9 +229,8 @@
   --text-overline--line-height: 14px;
   --text-overline--font-weight: 700;
   --text-overline--letter-spacing: 0.14em;
-  /* Used only by the dashboard stats bar: big enough to lead a segment. */
-  --text-stat: 38px;
-  --text-stat--line-height: 40px;
+  --text-stat: 28px;
+  --text-stat--line-height: 32px;
   --text-stat--font-weight: 700;
   --text-stat--letter-spacing: -0.01em;
 

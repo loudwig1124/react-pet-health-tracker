@@ -65,11 +65,9 @@ function QuickLogSlot({ pets }: { pets: readonly { id: string; name: string }[] 
   )
 }
 
-/**
- * One segment of the stats bar. The four counters are a single bordered surface
- * with dividers, so the row reads as one object at any width instead of four
- * stretched cards whose number and label drift apart.
- */
+const COUNTER_LINK =
+  'focus-visible:ring-ring group flex min-w-0 items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none'
+
 interface CounterProps {
   testId: string
   to: string
@@ -77,37 +75,33 @@ interface CounterProps {
   label: string
   detail: string
   tone: 'neutral' | 'overdue' | 'due-soon' | 'brand'
-  /** Divider classes: the bar is 2×2 below md and 1×4 from md up. */
-  edge: string
 }
 
-const COUNTER_TONE: Record<CounterProps['tone'], string> = {
-  neutral: 'text-foreground',
-  overdue: 'text-status-overdue',
-  'due-soon': 'text-status-due-soon',
-  brand: 'text-primary',
-}
+function Counter({ testId, to, value, label, detail, tone }: CounterProps) {
+  const toneClasses =
+    tone === 'overdue'
+      ? 'border-status-overdue/25 bg-status-overdue-soft text-status-overdue'
+      : tone === 'due-soon'
+        ? 'border-status-due-soon/25 bg-status-due-soon-soft text-status-due-soon'
+        : tone === 'brand'
+          ? 'border-primary/20 bg-accent-soft text-primary'
+          : 'border-border bg-card text-foreground'
 
-function Counter({ testId, to, value, label, detail, tone, edge }: CounterProps) {
   return (
     <Link
       to={to}
       data-testid={testId}
       data-count={value}
       aria-label={`${value} ${label}`}
-      className={cn(
-        'focus-visible:ring-ring border-border group flex min-w-0 flex-col justify-center gap-1.5 px-5 py-4 transition-colors duration-[var(--dur-fast)] hover:bg-muted/60 focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
-        edge,
-      )}
+      className={cn(COUNTER_LINK, toneClasses, 'hover:brightness-[0.985]')}
     >
-      <span className="text-overline text-muted-foreground truncate uppercase">{label}</span>
-      {/* Plain template string, not cn(): tailwind-merge classifies an unknown
-          `text-*` token as a colour and would drop the font size in favour of
-          the tone class. */}
-      <span className={`text-stat leading-none ${COUNTER_TONE[tone]}`}>
-        <NumberTicker value={value} testId={`${testId}-value`} label={label} />
+      <span className="flex min-w-0 flex-col">
+        <span className="text-stat leading-none">
+          <NumberTicker value={value} testId={`${testId}-value`} label={label} />
+        </span>
+        <span className="text-caption mt-1 truncate opacity-80">{detail}</span>
       </span>
-      <span className="text-caption text-muted-foreground truncate">{detail}</span>
+      <span className="text-overline shrink-0 text-right">{label}</span>
     </Link>
   )
 }
@@ -496,16 +490,10 @@ export function DashboardOverview() {
 
   return (
     <div className="flex flex-col gap-6" data-testid="dashboard-overview">
-      {/*
-       * One bar, four equal segments (05 F1). Previously four separate cards:
-       * at 1920 each stretched to ~400 px and its number drifted hundreds of
-       * pixels from its own label. As one surface the segments stay equal at
-       * every width and each number sits directly above its caption.
-       */}
       <section
         data-testid="dashboard-counters"
         aria-label="Household counters"
-        className="border-border bg-card grid grid-cols-2 overflow-hidden rounded-xl border md:grid-cols-4"
+        className="grid grid-cols-2 gap-3 md:grid-cols-4"
       >
         <Counter
           testId="counter-pets"
@@ -514,7 +502,6 @@ export function DashboardOverview() {
           label={attention.petCount === 1 ? 'pet' : 'pets'}
           detail="In the household"
           tone="neutral"
-          edge=""
         />
         <Counter
           testId="counter-overdue"
@@ -523,7 +510,6 @@ export function DashboardOverview() {
           label="overdue"
           detail="Drill into vaccinations"
           tone="overdue"
-          edge="border-l"
         />
         <Counter
           testId="counter-due-soon"
@@ -532,7 +518,6 @@ export function DashboardOverview() {
           label="due soon"
           detail={`Within ${settings.dueSoonWindowDays} days`}
           tone="due-soon"
-          edge="border-t md:border-t-0 md:border-l"
         />
         <Counter
           testId="counter-visits"
@@ -541,7 +526,6 @@ export function DashboardOverview() {
           label="visits this week"
           detail="Mon–Sun, upcoming"
           tone="brand"
-          edge="border-t border-l md:border-t-0"
         />
       </section>
 

@@ -47,7 +47,7 @@ Priority is the heading; each row carries value, IA location, effort and risk. N
 
 | Candidate | Verdict | Reason |
 | --- | --- | --- |
-| Home as a real dashboard | **Accept** as F1/F2 | Reshape "stat cards" into **one stats bar with four equal segments** (owner decision 2026-11-26: four separate cards left a number hundreds of pixels from its own label at 1920) and keep the needs-attention rail; quick log and recent journal stay parity. 03's hand-off asked 05 to decide: **larger cards yes, hero tiles no.** |
+| Home as a real dashboard | **Accept** as F1/F2 | Reshape "stat cards" into a compact four-card strip and keep the needs-attention rail; quick log and recent journal stay parity. 03's hand-off asked 05 to decide: **larger cards yes, hero tiles no.** |
 | Tables: sorting, filtering, column visibility | **Accept sort/filter** (F5/F6), **reject visibility** (F13) | Sorting and status/pet filters are the desktop payoff; hiding columns at six–eight columns adds state for no gain. |
 | Global search / command palette | **Accept** (F3), scoped | Simple substring matching and 8 results per group; no fuzzy ranking or date parsing in v1; navigation and create share one surface. |
 | Keyboard-first flow | **Accept** (F4/F8) | Cheap, high perceived quality, already mapped in 03; 03's alias rules cover browser-reserved keys. |
