@@ -16,47 +16,38 @@ import { HydrateFallback } from './hydrate-fallback'
  */
 const dashboardHandle: RouteHandle = {
   title: 'Dashboard',
-  description: 'What needs attention today, the household at a glance, and the latest entries.',
 }
 
 const petsHandle: RouteHandle = {
   title: 'Pets',
-  description: 'Every pet in the household, sortable and filterable.',
 }
 
 const petDetailHandle: RouteHandle = {
   title: 'Pet',
-  description: 'Vaccinations, clinical records, visits and journal entries for one pet.',
 }
 
 const appointmentsHandle: RouteHandle = {
   title: 'Appointments',
-  description: 'Upcoming and past vet visits, as a table or a month calendar.',
 }
 
 const vaccinationsHandle: RouteHandle = {
   title: 'Vaccinations',
-  description: 'Every dose on record, with its due status.',
 }
 
 const recordsHandle: RouteHandle = {
   title: 'Health records',
-  description: 'Append-only clinical notes for the household, newest first.',
 }
 
 const journalHandle: RouteHandle = {
   title: 'Journal',
-  description: 'The household log, grouped by day.',
 }
 
 const profileHandle: RouteHandle = {
   title: 'Profile',
-  description: 'Owner, pets, preferences and household data.',
 }
 
 const notFoundHandle: RouteHandle = {
   title: 'Page not found',
-  description: 'That address is not part of the household notebook.',
 }
 
 export const appRoutes: RouteObject[] = [

@@ -20,7 +20,6 @@ import { routeHandleFrom, type RouteHandle } from '@/lib/shell'
 
 const FALLBACK_HANDLE: RouteHandle = {
   title: 'Pet Health Tracker',
-  description: 'An offline household notebook for pets.',
 }
 
 /** The takeover is only needed on a fresh/reset household: lazy, like a route. */
@@ -131,7 +130,7 @@ export function AppShell() {
           className="app-scroll relative h-svh min-w-0 flex-1"
           data-testid="app-scroll"
         >
-          <AppHeader title={handle.title} description={handle.description} />
+          <AppHeader title={handle.title} />
           <div
             data-testid="app-content"
             className="w-full min-w-0 shrink-0 px-[var(--page-gutter)] pt-6 pb-10 transition-[padding] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"

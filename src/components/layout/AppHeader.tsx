@@ -5,18 +5,18 @@ import { openCommandPalette } from '@/lib/desktop/events'
 
 export interface AppHeaderProps {
   title: string
-  description: string
 }
 
 /**
  * Sticky header (03 §1): 64 px (56 px <1024), opaque paper + hairline. The rail
  * toggle lives in the sidebar's own brand row, so this bar is only the page
  * title, the palette trigger and the screen's primary action — its title lines
- * up exactly with the cards below. The Progressive Blur strip softens the
+ * up exactly with the cards below. There is no subtitle: the owner asked for the
+ * title alone (the per-screen descriptions were deleted, not hidden). The Progressive Blur strip softens the
  * content that scrolls under the edge — a static CSS effect, never an animated
  * filter (04 §5).
  */
-export function AppHeader({ title, description }: AppHeaderProps) {
+export function AppHeader({ title }: AppHeaderProps) {
   return (
     <header
       data-testid="app-header"
@@ -27,9 +27,6 @@ export function AppHeader({ title, description }: AppHeaderProps) {
           <h1 className="text-title truncate" data-testid="page-title">
             {title}
           </h1>
-          <p className="text-caption text-muted-foreground hidden truncate min-[1024px]:block">
-            {description}
-          </p>
         </div>
 
         {/*

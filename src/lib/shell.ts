@@ -65,7 +65,6 @@ export function parseSidebarPreference(raw: string | null | undefined): SidebarP
 /** Metadata a lazy route declares for the shell header (03 §1). */
 export interface RouteHandle {
   title: string
-  description: string
 }
 
 /** Finds the deepest route handle carrying a title. */
