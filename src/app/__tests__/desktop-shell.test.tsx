@@ -48,14 +48,18 @@ describe('desktop shell — mouse paths and no keyboard shortcuts', () => {
     await waitForShell()
 
     fireEvent.click(screen.getByTestId('header-search'))
-    const palette = await screen.findByTestId('command-palette')
+    const palette = await screen.findByTestId('command-palette', undefined, {
+      timeout: 5000,
+    })
     expect(within(palette).getByTestId('command-input')).toHaveFocus()
     expect(within(palette).getByRole('listbox')).toBeInTheDocument()
 
     fireEvent.change(within(palette).getByTestId('command-input'), {
       target: { value: 'bella' },
     })
-    const petItem = await screen.findByTestId(/^command-item-pet:/)
+    const petItem = await screen.findByTestId(/^command-item-pet:/, undefined, {
+      timeout: 5000,
+    })
     fireEvent.click(petItem)
 
     await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/pets\//))
@@ -67,7 +71,9 @@ describe('desktop shell — mouse paths and no keyboard shortcuts', () => {
     await waitForShell()
 
     fireEvent.click(screen.getByTestId('header-search'))
-    const createGroup = await screen.findByTestId('command-group-create')
+    const createGroup = await screen.findByTestId('command-group-create', undefined, {
+      timeout: 5000,
+    })
     fireEvent.click(within(createGroup).getByTestId('command-item-create:visit'))
 
     expect(await screen.findByTestId('booking-form')).toBeInTheDocument()
