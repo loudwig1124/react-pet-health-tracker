@@ -1,5 +1,5 @@
 import { ArrowRight, CalendarDays, NotebookPen, PawPrint } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { DueBadge } from '@/components/app/DueBadge'
@@ -157,6 +157,46 @@ function worstAttentionByPet(
   return byPet
 }
 
+/**
+ * One header for every dashboard card: the title on the left, the card's
+ * shortcut on the right. Counts sit next to the title (Pets) or next to the
+ * shortcut (Needs attention) depending on `countPlacement`.
+ */
+function CardHeader({
+  title,
+  count,
+  countPlacement = 'title',
+  action,
+}: {
+  title: string
+  count?: number
+  countPlacement?: 'title' | 'action'
+  action?: ReactNode
+}) {
+  const badge =
+    count !== undefined && count > 0 ? (
+      <span
+        data-testid={`dashboard-${title.toLowerCase().replace(/\s+/g, '-')}-count`}
+        className="bg-muted text-muted-foreground text-caption inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-semibold tabular-nums"
+      >
+        {count}
+      </span>
+    ) : null
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="text-overline text-muted-foreground">{title}</h2>
+        {countPlacement === 'title' ? badge : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {countPlacement === 'action' ? badge : null}
+        {action}
+      </div>
+    </div>
+  )
+}
+
 function HouseholdPets({
   pets,
   attention,
@@ -171,24 +211,15 @@ function HouseholdPets({
       className="border-border bg-card flex min-w-0 flex-col gap-3 rounded-xl border p-4"
       aria-label="Pets"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <h2 className="text-overline text-muted-foreground">
-            Pets
-            <span className="sr-only"> </span>
-          </h2>
-          <span
-            aria-hidden="true"
-            data-testid="dashboard-pets-count"
-            className="bg-muted text-muted-foreground text-caption inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 font-semibold tabular-nums"
-          >
-            {pets.length}
-          </span>
-        </div>
-        <Link to="/pets" className="text-small text-primary shrink-0 hover:underline">
-          View all pets
-        </Link>
-      </div>
+      <CardHeader
+        title="Pets"
+        count={pets.length}
+        action={
+          <Link to="/pets" className="text-small text-primary shrink-0 hover:underline">
+            View all pets
+          </Link>
+        }
+      />
 
       {pets.length === 0 ? (
         <div
@@ -256,14 +287,16 @@ function AttentionRail({ attention }: { attention: readonly AttentionDose[] }) {
       aria-label="Needs attention"
       className="border-border bg-card flex min-w-0 flex-col gap-3 rounded-xl border p-4"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-overline text-muted-foreground">Needs attention</h2>
-        {attention.length > 0 ? (
-          <span className="text-caption text-muted-foreground tabular-nums">
-            {attention.length}
-          </span>
-        ) : null}
-      </div>
+      <CardHeader
+        title="Needs attention"
+        count={attention.length}
+        countPlacement="action"
+        action={
+          <Link to="/vaccinations" className="text-small text-primary shrink-0 hover:underline">
+            View all vaccinations
+          </Link>
+        }
+      />
 
       {attention.length === 0 ? (
         <p className="text-small text-muted-foreground" data-testid="attention-empty">
@@ -308,14 +341,6 @@ function AttentionRail({ attention }: { attention: readonly AttentionDose[] }) {
           ))}
         </ul>
       )}
-
-      <Link
-        to="/vaccinations"
-        className="text-caption text-primary focus-visible:ring-ring inline-flex w-fit items-center gap-1 rounded-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
-      >
-        View all vaccinations
-        <ArrowRight aria-hidden="true" className="size-3" />
-      </Link>
     </section>
   )
 }
@@ -328,7 +353,14 @@ function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardD
       aria-label="Next visit"
       className="border-border bg-card flex min-w-0 flex-col gap-2 rounded-xl border p-4"
     >
-      <h2 className="text-overline text-muted-foreground">Next visit</h2>
+      <CardHeader
+        title="Next visit"
+        action={
+          <Link to="/appointments" className="text-small text-primary shrink-0 hover:underline">
+            All appointments
+          </Link>
+        }
+      />
       {visit === null ? (
         <div className="flex flex-col gap-3" data-testid="next-visit-empty">
           <p className="text-small text-muted-foreground">
@@ -366,14 +398,6 @@ function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardD
           </ul>
         </>
       )}
-
-      <Link
-        to="/appointments"
-        className="text-caption text-primary focus-visible:ring-ring inline-flex w-fit items-center gap-1 rounded-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
-      >
-        All appointments
-        <ArrowRight aria-hidden="true" className="size-3" />
-      </Link>
     </section>
   )
 }
@@ -515,7 +539,7 @@ export function DashboardOverview() {
        * Row 1 pairs the two list cards (pets with per-pet due chips, needs
        * attention); row 2 pairs next visit with the recent journal.
        */}
-      <div className="grid gap-4 xl:grid-cols-2" data-testid="dashboard-cards">
+      <div className="grid items-start gap-4 xl:grid-cols-2" data-testid="dashboard-cards">
         <HouseholdPets pets={pets} attention={attention.attention} />
         <AttentionRail attention={attention.attention} />
         <NextVisit data={data} />
