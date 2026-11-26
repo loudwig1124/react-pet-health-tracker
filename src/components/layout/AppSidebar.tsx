@@ -82,8 +82,12 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       data-state={open ? 'expanded' : 'collapsed'}
       data-rail={rail ? 'true' : 'false'}
       aria-label="Household navigation"
-      style={{ width: open ? 'var(--sidebar-width)' : 'var(--sidebar-width-rail)' }}
-      className="border-border bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col overflow-hidden border-r transition-[width] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"
+      // Literal px, not var(): the width must interpolate for the 180 ms
+      // transition, and swapping one var() reference for another is not
+      // reliably animatable across engines. These mirror --sidebar-width and
+      // --sidebar-width-rail in tokens.css.
+      style={{ width: open ? 240 : 72 }}
+      className="border-border bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col overflow-hidden border-r transition-[width] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)] will-change-[width]"
     >
       <div
         className={cn(

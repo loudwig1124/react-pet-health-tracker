@@ -20,9 +20,9 @@ export function AppHeader({ title, description }: AppHeaderProps) {
   return (
     <header
       data-testid="app-header"
-      className="border-border bg-background sticky top-0 z-30 flex h-[var(--header-height)] w-full shrink-0 items-center border-b"
+      className="border-border bg-background sticky top-0 z-30 flex h-[var(--header-height)] w-full shrink-0 items-center border-b transition-[height] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"
     >
-      <div className="relative flex h-full w-full items-center gap-3 px-[var(--page-gutter)]">
+      <div className="relative flex h-full w-full items-center gap-3 px-[var(--page-gutter)] transition-[padding] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]">
         <div className="min-w-0 flex-1">
           <h1 className="text-title truncate" data-testid="page-title">
             {title}

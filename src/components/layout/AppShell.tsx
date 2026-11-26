@@ -134,7 +134,7 @@ export function AppShell() {
           <AppHeader title={handle.title} description={handle.description} />
           <div
             data-testid="app-content"
-            className="w-full min-w-0 shrink-0 px-[var(--page-gutter)] pt-6 pb-10"
+            className="w-full min-w-0 shrink-0 px-[var(--page-gutter)] pt-6 pb-10 transition-[padding] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"
           >
             <div key={location.pathname} className="app-page">
               <Outlet />
