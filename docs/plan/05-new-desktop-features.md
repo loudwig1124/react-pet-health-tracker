@@ -47,6 +47,7 @@ Priority is the heading; each row carries value, IA location, effort and risk. N
 
 | Candidate | Verdict | Reason |
 | --- | --- | --- |
+| Clinical notes can be corrected | **Accept as C** (owner, 2026-11-27) | Full edit + delete on `health_record`, matching the vaccinations table. R5 was amended from append-only to "correctable, never bulk-wiped"; corrections replace the row and there is no audit trail (stated in ACCEPTANCE §5d). |
 | Doses can be corrected | **Accept as A + C** (owner, 2026-11-27) | Edit in place + delete with a confirm, and a 3 s Undo on record. Corrections rewrite history (no audit trail) — option B (void + replace) was declined for a single-household notebook. |
 | Home as a real dashboard | **Accept** as F1/F2 | Reshape "stat cards" into a compact four-card strip and keep the needs-attention rail; quick log and recent journal stay parity. 03's hand-off asked 05 to decide: **larger cards yes, hero tiles no.** |
 | Tables: sorting, filtering, column visibility | **Accept sort/filter** (F5/F6), **reject visibility** (F13) | Sorting and status/pet filters are the desktop payoff; hiding columns at six–eight columns adds state for no gain. |

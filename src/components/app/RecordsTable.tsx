@@ -2,12 +2,14 @@
  * `/records` household table (05 F5/F6, 06 M2).
  *
  * Deliberately dependency-free: a plain sorted table, no TanStack (04 §2.2).
- * Health records are append-only (R5), so there is no actions column at all —
- * no chevron, edit or delete affordance exists to render.
+ * Notes are correctable (R5, amended 2026-11-27), so each row carries the same
+ * Edit affordance the vaccinations table uses; delete lives inside the dialog
+ * behind a confirmation.
  */
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, Pencil } from 'lucide-react'
 import { useMemo } from 'react'
 
+import { Button } from '@/components/ui/button'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateKey } from '@/lib/format'
 import {
@@ -19,6 +21,7 @@ import {
   type RecordsTableQuery,
   type SortDirection,
 } from '@/lib/records-table'
+import type { HealthRecord } from '@/lib/rules/types'
 import { cn } from '@/lib/utils'
 
 import { PetAvatar } from './PetAvatar'
@@ -38,9 +41,11 @@ export interface RecordsTableProps {
   rows: readonly RecordRow[]
   query: RecordsTableQuery
   onSortChange: (sort: RecordSortKey, dir: SortDirection) => void
+  /** Opens the note for correction; absent on read-only surfaces. */
+  onEdit?: (record: HealthRecord) => void
 }
 
-export function RecordsTable({ rows, query, onSortChange }: RecordsTableProps) {
+export function RecordsTable({ rows, query, onSortChange, onEdit }: RecordsTableProps) {
   const sorted = useMemo(
     () => sortRecordRows(rows, query.sort, query.dir),
     [rows, query.sort, query.dir],
@@ -86,6 +91,9 @@ export function RecordsTable({ rows, query, onSortChange }: RecordsTableProps) {
           ))}
           <TableHead className="hidden lg:table-cell">Vet</TableHead>
           <TableHead className="hidden xl:table-cell">Treatment</TableHead>
+          <TableHead className="text-right">
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -131,6 +139,20 @@ export function RecordsTable({ rows, query, onSortChange }: RecordsTableProps) {
               )}
             >
               {row.record.treatment ?? '—'}
+            </TableCell>
+            <TableCell className="text-right">
+              {onEdit === undefined ? null : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  data-testid={`record-edit-${row.id}`}
+                  onClick={() => onEdit(row.record)}
+                >
+                  <Pencil aria-hidden="true" />
+                  Edit
+                </Button>
+              )}
             </TableCell>
           </TableRow>
         ))}

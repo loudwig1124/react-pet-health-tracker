@@ -1,11 +1,12 @@
 /**
- * Health-record repository — append-only by design (R5).
+ * Health-record repository (R5, amended 2026-11-27).
  *
- * This module intentionally exports only a read and an append: there is no
- * update, no delete and no UI affordance for either. The only deletion path in
- * the app is the pet-delete cascade and the household reset, both of which act
- * on whole pets/rows from their own repositories. A Vitest suite asserts this
- * export surface stays two functions.
+ * Notes were append-only; a misclicked diagnosis was therefore permanent. The
+ * owner accepted corrections, so this module now also exposes `updateHealthRecord`
+ * and `deleteHealthRecord`, and a Vitest suite asserts that exact surface — bulk
+ * wipes stay forbidden, and deleting a pet still cascades to its notes.
+ *
+ * Corrections replace the row: there is no audit trail (ACCEPTANCE §5d).
  */
 import type { HealthRecord, HealthRecordDraft } from '@/lib/rules/types'
 
@@ -24,6 +25,33 @@ function sortNewestFirst(records: HealthRecord[]): HealthRecord[] {
 
 export async function listHealthRecordsForPet(petId: string): Promise<HealthRecord[]> {
   return sortNewestFirst(await db.health_record.where('petId').equals(petId).toArray())
+}
+
+export async function updateHealthRecord(
+  id: string,
+  draft: HealthRecordDraft,
+): Promise<HealthRecord> {
+  const parsed = parseRow(healthRecordDraftSchema, draft, 'health record draft')
+  const existing = await db.health_record.get(id)
+  if (existing === undefined) {
+    throw new Error(`Health record ${id} does not exist.`)
+  }
+  const pet = await db.pet.get(parsed.petId)
+  if (pet === undefined) {
+    throw new Error(`Pet ${parsed.petId} does not exist.`)
+  }
+  const record = parseRow(
+    healthRecordSchema,
+    { ...existing, ...parsed, id: existing.id, createdAt: existing.createdAt },
+    'health record',
+  )
+  await db.health_record.put(record)
+  return record
+}
+
+/** Removes one note; the dialog asks first. */
+export async function deleteHealthRecord(id: string): Promise<void> {
+  await db.health_record.delete(id)
 }
 
 export async function appendHealthRecord(

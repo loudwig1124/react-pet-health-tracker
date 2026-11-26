@@ -13,7 +13,7 @@ const PALETTE_JOURNAL_LIMIT = 500
  * lazy chunk), so this read never runs during normal navigation.
  *
  * Pets and appointments come from the light read model; records are assembled
- * from the per-pet append-only read (R5 keeps the repository surface unchanged);
+ * from the per-pet record read (R5's surface test covers the repository);
  * journal uses the same household read as `/journal`. Any write re-runs the
  * query, so a note added in another tab is findable immediately (R10).
  */

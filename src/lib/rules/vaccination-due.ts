@@ -1,7 +1,8 @@
 /**
  * R1 — vaccination due status: the newest dose per vaccine wins.
  *
- * Vaccinations are append-only, so a pet accumulates history. Ranking every row
+ * A pet accumulates dose history (a row can be corrected, not rewritten out of the
+ * record). Ranking every row
  * would let an old, overdue dose outrank the booster that superseded it — the
  * fixed D2/Q2 bug where a re-vaccinated pet could never clear "overdue".
  *

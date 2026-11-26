@@ -35,7 +35,7 @@
 ├── /pets/:petId/:tab?  lazy · overview + deep-linkable tabs + context rail
 ├── /appointments    lazy · table + month calendar; ?view&status&pet&date
 ├── /vaccinations    lazy · read view over doses
-├── /records         lazy · read-only append-only notes
+├── /records         lazy · notes list with row correction
 ├── /journal         lazy
 ├── /profile         lazy · owner, pets, preferences, data
 └── *                lazy NotFound
@@ -74,7 +74,7 @@ pnpm dlx shadcn@latest add  @magicui/number-ticker   # CLI writes components/ui/
 | JSON store | one document in localStorage or an IndexedDB blob | ~0 deps; localStorage 5 MB synchronous ceiling | no transactions/indexes, corruption window — **settings only** |
 
 **Reason:** multi-tab safety is decisive for a desktop app that gets opened twice — IndexedDB serialises transactions and `liveQuery` broadcasts writes, while both SQLite options push cross-tab locking onto us (`sql.js` rewrites the whole file; OPFS sync handles are exclusive). Second, "light and smooth" argues against 858 KB of wasm + worker cold start for a household notebook. Third, `liveQuery` removes 02 R10's write-refresh bug class instead of re-porting it. **`zod` 4.6 is added** as the CHECK-constraint replacement (one validation lib, no wasm).
-**Risk:** no engine-enforced constraints — mitigate exactly as 02 §4 risks 1–5 (one repository per entity, Zod schemas, append-only export-surface test, compound indexes, migration fixtures). If M1 finds IndexedDB unavailable or locked down, fall back to the OPFS path, never to localStorage.
+**Risk:** no engine-enforced constraints — mitigate exactly as 02 §4 risks 1–5 (one repository per entity, Zod schemas, repository export-surface test, compound indexes, migration fixtures). If M1 finds IndexedDB unavailable or locked down, fall back to the OPFS path, never to localStorage.
 ### D6a · Identity and keys (confirms 02 §6)
 **Question:** do UUID user ids plus literal `demo-*` demo ids work for Dexie keys, multi-tab writes and `/pets/:petId`, and can `createdAt` replace the old `id` tie-break?
 **Choice — confirmed, with one addition.** Our stores use string keys, so UUIDs and `demo-pet-bella` are one key type: no reserved-range hack, and no numeric `++id` (numbers and literal ids cannot share a key path at all). Multi-tab writes stay per-record last-write-wins; UUIDs are minted client-side so two tabs cannot allocate the same id, unlike autoincrement. `/pets/<uuid>` and `/pets/demo-pet-bella` are URL-safe, and `{ petId: string | null }` becomes the hand-off/search-param payload unchanged in shape. **Tie-break:** `createdAt` (ISO ms) is fine as the vaccination ordering key, but append `id` as the final deterministic tie-break and give seeded demo rows distinct, monotonic `createdAt` values — otherwise two same-millisecond doses make tests order-dependent. Migration cost is zero (initial schema); the only alternative (numeric ids + reserved demo range) is explicitly forbidden by 02.

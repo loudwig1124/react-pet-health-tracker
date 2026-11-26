@@ -1,7 +1,7 @@
 /**
  * `/records` read model, F5 comparators and F6 URL state (05 F5/F6, 06 M2).
  *
- * Health records are append-only (R5): this module reads and sorts, and the
+ * Health records are correctable (R5, amended 2026-11-27): this module reads and sorts, and the
  * page renders no edit/delete affordance. `/records` is a plain sorted table —
  * deliberately no TanStack — so a household note list never pays the table
  * library's bytes (04 §2.2).

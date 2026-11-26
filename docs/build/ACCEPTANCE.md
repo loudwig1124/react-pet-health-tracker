@@ -50,7 +50,7 @@ write refreshes every mounted surface (R10), settings/density in `localStorage`,
 at boot with a blocking storage-failure screen.
 
 **Rules R1–R10** — pure `src/lib/rules` (no React/Dexie/clock): R1 newest-dose due status, R2 settings
-and unit conversion, R3 appointment state machine, R4 one local calendar day, R5 append-only notes,
+and unit conversion, R3 appointment state machine, R4 one local calendar day, R5 correctable notes,
 R6 journal edits/undo, R7 exact-id demo ownership, R8 reset semantics, R9 pet validation, R10 one write
 path + hand-off. 128 rule tests + 42 repository integration tests.
 
@@ -130,7 +130,7 @@ route chunk is `/pets` at 13.4 kB.
 Every Flutter surface keeps its screen/action/rule: dashboard/home, pets, pet detail, pet form,
 clinical records (append-only), vaccinations, appointments + actions + calendar, journal, profile/
 settings, first-run/welcome, sample household, about/version. The rules are the §4 port:
-R1 newest dose, R2 settings/lb, R3 state machine, R4 local day, R5 append-only, R6 journal, R7 demo
+R1 newest dose, R2 settings/lb, R3 state machine, R4 local day, R5 correctable notes, R6 journal, R7 demo
 ids, R8 reset, R9 pet validation, R10 live refresh/hand-off. Evidence: `src/lib/rules` + `src/lib/db/__tests__`
 (128 + 42 tests inside the 397) and the milestone gate reports.
 
@@ -218,6 +218,32 @@ deliberate choice for a single-household notebook (option B was declined). R5's 
 still governs clinical records.
 
 Final numbers after this change: **172.5 kB** first load, 15.4 kB CSS, 68/68 e2e, 403 Vitest tests.
+
+### 5d · Clinical notes can be corrected (owner decision C, 2026-11-27)
+
+Health records were the last append-only entity, so a misclicked diagnosis could never be fixed. The
+owner chose full parity with vaccinations, accepting that **corrections rewrite history**:
+
+- `health_record` now exposes `listHealthRecordsForPet`, `appendHealthRecord`, `updateHealthRecord` and
+  `deleteHealthRecord`; the export-surface test asserts exactly that list, and still forbids any bulk
+  wipe (`clearHealthRecords` and friends).
+- **R5 was amended**, not quietly dropped: a note still requires a condition or a diagnosis, an edit
+  re-runs the same draft rule, and deleting a pet still cascades to its notes. `docs/plan/02` and the
+  build plan carry the new wording.
+- The records table has an **Edit** action per row; the dialog prefills from the stored note, saving
+  replaces it in place (same `id` and `createdAt`, so its place in the history is stable), and delete
+  arms to *"Delete permanently?"* before removing anything.
+
+Evidence: `health-record-correction.test.ts` (a correction keeps `id`/`createdAt` and replaces the
+diagnosis; an edit that fails the draft rule leaves the stored row untouched; deleting one note leaves
+the pet and its other notes intact), `health-records-surface.test.ts` (surface + no bulk wipe),
+`seed-and-household.test.ts`, `pets.spec.ts › records can be added and corrected from the household
+list` and `records.spec.ts › a note can be recorded, corrected in place, and deleted after a confirm`.
+
+**Honest limitation:** no audit trail and no "voided" state — the corrected text replaces the original.
+That is the trade the owner chose over the append-only rule.
+
+Final numbers after this change: **172.5 kB** first load, 69/69 e2e, 406 Vitest tests.
 
 ## 6 · Demo script — from a fresh build
 

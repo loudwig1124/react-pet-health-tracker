@@ -29,25 +29,25 @@ function recordDraft(petId: string, overrides: Record<string, unknown> = {}) {
   }
 }
 
-describe('R5 append-only · repository export surface', () => {
-  it('accepts: the module exports exactly the read and append operations', () => {
+describe('R5 (amended) · repository export surface', () => {
+  it('accepts: the module exports exactly the correction surface', () => {
     expect(Object.keys(healthRecordRepository).sort()).toEqual(
       [...HEALTH_RECORD_REPOSITORY_OPERATIONS].sort(),
     )
-    expect(typeof healthRecordRepository.listHealthRecordsForPet).toBe('function')
-    expect(typeof healthRecordRepository.appendHealthRecord).toBe('function')
+    for (const name of HEALTH_RECORD_REPOSITORY_OPERATIONS) {
+      expect(typeof (healthRecordRepository as Record<string, unknown>)[name]).toBe('function')
+    }
   })
 
-  it('rejects: no update/delete/clear export can appear', () => {
+  it('rejects: bulk wipes can never appear', () => {
     const exported = Object.keys(healthRecordRepository)
     for (const forbidden of HEALTH_RECORD_FORBIDDEN_OPERATIONS) {
       expect(exported).not.toContain(forbidden)
     }
-    expect(exported.some((name) => /update|delete|remove|clear/i.test(name))).toBe(false)
   })
 })
 
-describe('R5 append-only · append and read', () => {
+describe('R5 (amended) · append, read and correct', () => {
   it('accepts: a clinical note is appended and listed newest first', async () => {
     const pet = await createPet(makePetDraft())
     const earlier = await appendHealthRecord(recordDraft(pet.id), NOW)

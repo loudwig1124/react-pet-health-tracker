@@ -63,7 +63,7 @@ Scripts: `dev` · `build` (`tsc -b && vite build`) · `preview` · `typecheck` (
 
 ### M2 · Pets and records
 **Demo-able:** `/pets` sortable table with filters in the URL; add/edit/delete a pet with validation; pet detail Overview + Records tab; `/records` read-only household list with "Add record"; empty/error states.
-**Build:** `PetFormDialog` (R9); pet CRUD + cascade delete (appointments keep `petId = null`); append-only health records (R5); `PetAvatar` placeholder (02); pet detail shell with ABOUT / tab panel / context rail and stub tabs; F5/F6 for `/pets` (TanStack in the route chunk) and `/records` (plain sorted table, no TanStack); skeletons and empty states.
+**Build:** `PetFormDialog` (R9); pet CRUD + cascade delete (appointments keep `petId = null`); correctable health records (R5, amended: record + correct + delete); `PetAvatar` placeholder (02); pet detail shell with ABOUT / tab panel / context rail and stub tabs; F5/F6 for `/pets` (TanStack in the route chunk) and `/records` (plain sorted table, no TanStack); skeletons and empty states.
 **Acceptance (gate):** duplicate microchip rejected with a message; DOB/weight/name bounds enforced; deleting a pet removes its journal/vaccinations/records and keeps its appointments as Household; records expose no edit/delete anywhere; sort/filter/URL survive reload; route chunks within budget; **the 200/90 kB size gate is re-run and recorded here**; no layout thrash in review (04 §5 list).
 **Proves it:** Vitest R9, R5 export-surface + cascade, F5 sort comparators, F6 parse/serialise; Playwright pets CRUD, record append, sort survives reload, empty states, no console errors; `pnpm build && pnpm size`.
 **Out of scope:** vaccinations/appointments tabs, booking/actions, journal, profile, onboarding, palette.
@@ -104,7 +104,7 @@ pet-health-react/
 │   │   ├── pets.$petId/          # `/pets/:petId/:tab?` + ABOUT rail
 │   │   ├── appointments/         # `/appointments` table + lazy calendar
 │   │   ├── vaccinations/         # `/vaccinations` household doses
-│   │   ├── records/              # `/records` read-only append-only notes
+│   │   ├── records/              # `/records` notes with per-row correction
 │   │   ├── journal/              # `/journal` feed + inline editor/Sheet
 │   │   ├── settings/             # `/profile` owner, preferences, data
 │   │   └── not-found.tsx         # 404 inside the shell
@@ -136,7 +136,7 @@ pet-health-react/
 3. **R3 appointment state machine** (`appointment-fsm.ts`). Cases: scheduled → completed/cancelled/no_show; terminal immutable; same-status rejected; no-show blocked exactly at `scheduled_at` and allowed one second later; `"   "` cancel reason blocked; `completedAt` exactly when completed; `cancelReason` exactly when cancelled; reschedule = cancelled(`rescheduled`) + new scheduled row atomically (repository test).
 4. **R9 pet validation** (`pet-validation.ts`). Cases: trimmed name 1–40; DOB not future / not > 40 years; weight > 0 ≤ 300; microchip 9–15 digits, blank → null, unique across pets.
 5. **R2 settings** (`lib/db/settings.ts` + rule helpers). Cases: window 1–365 and the 7/14/30/60/90 options; lb conversion 12.4 → 27.3; unreadable settings → defaults; persistence across reload.
-6. **R5 append-only records** (`lib/db/repositories/health-records.ts`). Cases: export surface has no update/delete; the only delete is the pet cascade; the UI renders no edit/delete affordance.
+6. **R5 correction surface** (`lib/db/repositories/health-records.ts`). Cases: the export surface is exactly read/append/update/delete; a bulk wipe can never appear; an edit that fails the draft rule leaves the row untouched; deleting a pet still cascades to its notes.
 7. **R7/R8 demo ownership and reset** (`lib/db/seed`, household repository). Cases: fixed `demo-*` id lists; seed `createdAt` strictly increasing (demo doses deterministic, no same-millisecond pair); seed → add pet → clear → pet survives; clear → seed → clear leaves no orphans/duplicates; reset checkbox semantics.
 8. **R6 journal + R10 writes** (journal repository + hooks). Cases: editing time moves the day section; kind immutable; duration positive integer; delete confirms; `{petId: null}` hand-off becomes `?pet=all`; a write in one tab updates a mounted list in the other.
 
@@ -168,7 +168,7 @@ A gate is pass/fail; any red item blocks the next milestone. Run in this order:
 | R1 | **Storage availability and the SQLite-WASM/OPFS fallback.** A locked-down school browser profile can block or evict IndexedDB; the fallback store is unproven on the target. OPFS needs Chrome 86+/Safari 15.2+/Firefox 111+ (sync handles in workers Chrome 102+), and its handles are single-tab. | Probe storage at boot, `navigator.storage.persist()`, blocking failure screen with advice; never fall back to localStorage. Build the wasm path only if the probe fails, timeboxed behind the `lib/db` adapter seam and the two-tab test. |
 | R2 | **Bundle creep from Magic UI and its neighbours** — motion ≈20–50 kB, TanStack 31.6, `cmdk` 16.7, calendar 19.8 + date-fns, radix base 55–70. | Four-component shortlist only; palette on open, table in table routes, calendar in its own chunk, motion after first paint; size gate every gate; **drop the effect rather than optimize it**; review 04's ledger before adding anything. |
 | R3 | **Scope creep from desktop features.** F1–F6 are release one; F7–F9 are conditional; F10–F17 are deferred/rejected. | Lock the 05 register: no new route, dependency or data-model field without revising 03/04/06. Cut line at M5 = F7–F9. Musts green before any Should. |
-| R4 | **Rule drift / schema enforcement.** Dexie has no CHECK/UNIQUE/triggers, so parity bugs can return. | Zod schemas mirror the DDL, one repository per entity enforced by oxlint restricted imports, append-only export-surface test, §4 cases including the `createdAt` + `id` tie-break; 02 §5 regression cases are mandatory. |
+| R4 | **Rule drift / schema enforcement.** Dexie has no CHECK/UNIQUE/triggers, so parity bugs can return. | Zod schemas mirror the DDL, one repository per entity enforced by oxlint restricted imports, repository export-surface test, §4 cases including the `createdAt` + `id` tie-break; 02 §5 regression cases are mandatory. |
 | R5 | **Cross-tab / live-query freshness.** A frozen tab or missed broadcast shows stale household data. | Two-tab Playwright test each gate, refetch on `visibilitychange`/focus, `BroadcastChannel("pet-health")` fallback, never memoize lists across navigation. |
 | R6 | **Toolchain and test-matrix drift.** RR8 may hit a v7-only pattern; TS 7 types may lag; Chromium-only means **Safari is untested** and acceptable only while the demo runs in Chrome. | RR8 guard: stop, pin 7.18.7, one-line risk-register reason. TS 7 → pin `~6.0` if a dependency breaks. Safari smoke is a post-v1 task; demo in Chrome; reduced-motion and date/locale checks in M5. |
 

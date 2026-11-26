@@ -1,11 +1,14 @@
 /**
- * Append a clinical note (R5, 02 §1). Health records are append-only: this
- * dialog is the only write affordance in the app and there is deliberately no
- * edit or delete counterpart anywhere.
+ * Record or correct a clinical note (R5, amended 2026-11-27).
+ *
+ * Notes were append-only, which made a misclicked diagnosis permanent. The owner
+ * accepted corrections, so the same dialog now handles both: `initial` is null
+ * for a new note, or the stored note for an edit, and an edit can delete the row
+ * after a second confirming click.
  *
  * Presentational like the pet form: it validates through the shared
  * `validateHealthRecordDraft` rule and hands a valid draft to the route's
- * repository call; a failed append stays in the dialog with its values intact.
+ * repository call; a failed write stays in the dialog with its values intact.
  */
 import { useState, type FormEvent } from 'react'
 
@@ -27,7 +30,7 @@ import {
   validateHealthRecordDraft,
   type HealthRecordFieldErrors,
 } from '@/lib/rules/health-records'
-import type { DateKey, HealthRecordDraft, Pet } from '@/lib/rules/types'
+import type { DateKey, HealthRecord, HealthRecordDraft, Pet } from '@/lib/rules/types'
 
 function errorArray(message: string | undefined): { message: string }[] | undefined {
   return message === undefined ? undefined : [{ message }]
@@ -41,8 +44,12 @@ export interface HealthRecordDialogProps {
   /** On a pet's own page the pet is fixed and shown as text instead of a select. */
   lockedPet?: Pet | null
   today: DateKey
+  /** The note being corrected; absent for a new one. */
+  initial?: HealthRecord | null
   onClose: () => void
   onSubmit: (draft: HealthRecordDraft) => Promise<void>
+  /** Confirmed delete of the edited note. */
+  onDelete?: () => Promise<void>
 }
 
 export function HealthRecordDialog({
@@ -50,18 +57,25 @@ export function HealthRecordDialog({
   defaultPetId = null,
   lockedPet = null,
   today,
+  initial = null,
   onClose,
   onSubmit,
+  onDelete,
 }: HealthRecordDialogProps) {
+  const editing = initial !== null
   const [petId, setPetId] = useState<string>(
-    () => lockedPet?.id ?? defaultPetId ?? pets[0]?.id ?? '',
+    () => initial?.petId ?? lockedPet?.id ?? defaultPetId ?? pets[0]?.id ?? '',
   )
-  const [recordedOn, setRecordedOn] = useState(today)
-  const [condition, setCondition] = useState('')
-  const [diagnosis, setDiagnosis] = useState('')
-  const [treatment, setTreatment] = useState('')
-  const [prescribedMedication, setPrescribedMedication] = useState('')
-  const [vetName, setVetName] = useState('')
+  const [recordedOn, setRecordedOn] = useState(initial?.recordedOn ?? today)
+  const [condition, setCondition] = useState(initial?.condition ?? '')
+  const [diagnosis, setDiagnosis] = useState(initial?.diagnosis ?? '')
+  const [treatment, setTreatment] = useState(initial?.treatment ?? '')
+  const [prescribedMedication, setPrescribedMedication] = useState(
+    initial?.prescribedMedication ?? '',
+  )
+  const [vetName, setVetName] = useState(initial?.vetName ?? '')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<HealthRecordFieldErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -108,9 +122,11 @@ export function HealthRecordDialog({
     >
       <DialogContent data-testid="record-form" className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add a clinical note</DialogTitle>
+          <DialogTitle>{editing ? 'Edit clinical note' : 'Add a clinical note'}</DialogTitle>
           <DialogDescription>
-            Clinical notes are append-only: they are never edited or deleted after they are saved.
+            {editing
+              ? 'Correct the note. Saving replaces the stored row; there is no audit trail.'
+              : 'One note per visit. It can be corrected or deleted later from the records table.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -210,11 +226,37 @@ export function HealthRecordDialog({
 
           {formError === null ? null : (
             <p role="alert" data-testid="record-form-error" className="text-destructive text-small">
-              Could not add the note: {formError}
+              Could not {editing ? 'save' : 'add'} the note: {formError}
             </p>
           )}
 
           <DialogFooter>
+            {editing && onDelete !== undefined ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-destructive sm:mr-auto"
+                data-testid="record-delete"
+                disabled={saving || deleting}
+                onClick={() => {
+                  if (!confirmingDelete) {
+                    setConfirmingDelete(true)
+                    return
+                  }
+                  setDeleting(true)
+                  void onDelete()
+                    .then(() => {
+                      onClose()
+                    })
+                    .catch((error: unknown) => {
+                      setFormError(error instanceof Error ? error.message : String(error))
+                      setDeleting(false)
+                    })
+                }}
+              >
+                {confirmingDelete ? 'Delete permanently?' : 'Delete note'}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -224,7 +266,7 @@ export function HealthRecordDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={saving} data-testid="record-submit">
-              {saving ? 'Adding…' : 'Add record'}
+              {saving ? 'Saving…' : editing ? 'Save changes' : 'Add record'}
             </Button>
           </DialogFooter>
         </form>

@@ -18,7 +18,11 @@ import { RecordsTable } from '@/components/app/RecordsTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { appendHealthRecord } from '@/lib/db/repositories/health-records'
+import {
+  appendHealthRecord,
+  deleteHealthRecord,
+  updateHealthRecord,
+} from '@/lib/db/repositories/health-records'
 import { useCreateIntent } from '@/lib/hooks/useCreateIntent'
 import { useRecordsPageData } from '@/lib/hooks/useRecordsPageData'
 import {
@@ -32,6 +36,7 @@ import {
   type RecordSortKey,
   type SortDirection,
 } from '@/lib/records-table'
+import type { HealthRecord } from '@/lib/rules/types'
 
 function pluralNotes(count: number): string {
   return `${count} ${count === 1 ? 'note' : 'notes'}`
@@ -42,6 +47,8 @@ export function RecordsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = useMemo(() => parseRecordsTableQuery(searchParams), [searchParams])
   const [adding, setAdding] = useState(false)
+  // The note being corrected, or null when adding a new one.
+  const [editingRecord, setEditingRecord] = useState<HealthRecord | null>(null)
 
   const updateQuery = useCallback(
     (patch: Partial<RecordsTableQuery>, options: { replace?: boolean } = {}) => {
@@ -209,6 +216,7 @@ export function RecordsPage() {
           onSortChange={(sort: RecordSortKey, dir: SortDirection) =>
             updateQuery({ sort, dir }, { replace: false })
           }
+          onEdit={(record) => setEditingRecord(record)}
         />
       ) : null}
 
@@ -220,6 +228,21 @@ export function RecordsPage() {
           onClose={() => setAdding(false)}
           onSubmit={async (draft) => {
             await appendHealthRecord(draft)
+          }}
+        />
+      ) : null}
+
+      {editingRecord !== null && data !== null ? (
+        <HealthRecordDialog
+          pets={data.pets}
+          today={data.today}
+          initial={editingRecord}
+          onClose={() => setEditingRecord(null)}
+          onSubmit={async (draft) => {
+            await updateHealthRecord(editingRecord.id, draft)
+          }}
+          onDelete={async () => {
+            await deleteHealthRecord(editingRecord.id)
           }}
         />
       ) : null}

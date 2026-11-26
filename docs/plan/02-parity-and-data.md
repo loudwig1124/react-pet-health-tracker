@@ -97,12 +97,16 @@ date-only values stay `YYYY-MM-DD`. Never derive a day from a UTC instant — th
   groups under 1 Mar, not Today.
 - Last visit = later of (latest completed appointment's local day, latest `health_record.recorded_on`).
 
-**R5 · Clinical notes are append-only.** `health_record` exposes read + append only: no update, no
-delete, no UI affordance. The only deletion is the pet-delete cascade. IndexedDB has no triggers, so
-this becomes a repository-surface rule (no exported update/delete + a test that fails if one appears).
+**R5 · Clinical notes are correctable, never bulk-wiped** *(amended 2026-11-27, owner decision C)*.
+The original rule was append-only; a misclicked diagnosis was therefore permanent. `health_record` now
+exposes read + append + `updateHealthRecord` + `deleteHealthRecord`, and the export-surface test asserts
+exactly that list. What survives from the original rule: a note still needs condition or diagnosis, an
+edit re-runs the same draft rule, deleting a pet still cascades to its notes, and no bulk "clear all"
+operation may appear. Corrections replace the row — **there is no audit trail**, stated in
+`ACCEPTANCE` §5d rather than implied.
 
-- Accept: the history list renders no chevron, edit or delete control; the data exports only
-  `listForPet`/`append`.
+- Accept: the records list offers Edit, the edit dialog prefills from the stored row, delete needs a
+  second confirming click, and the export surface is exactly the four operations above.
 
 **R6 · Journal entries are editable.** Time, note and duration may change after creation; kind is
 immutable in the edit form; duration must be a positive whole number when present; deleting requires a
@@ -160,7 +164,7 @@ Ids and timestamps are storage fields; form drafts carry neither. Every entity i
 | `Owner` | `id`, `name` (trimmed, non-empty), `email` (default `''`), `phone` (default `''`), `createdAt`, `updatedAt`. Exactly one row (fixed key) |
 | `Pet` | `id`, `ownerId`, `name` (1–40), `species` (1–30), `breed?` (≤40), `sex` (`male/female/unknown`), `dateOfBirth` (date, ≤ today, ≥ **exactly** today−40 y — see the R9 note below), `weightKg` (>0, ≤300), `microchip?` (9–15 digits, **unique**), `createdAt`, `updatedAt`. **No photo field** |
 | `JournalEntry` | `id`, `petId` (required, cascade), `kind` (`walk/fed/meds/grooming/training/note/symptom`), `occurredAt` (instant), `note?`, `durationMinutes?` (integer > 0), `createdAt`, `updatedAt` |
-| `HealthRecord` | `id`, `petId` (required, cascade), `recordedOn` (date), `condition?`, `diagnosis?` (at least one non-empty), `treatment?`, `prescribedMedication?`, `vetName?`, `createdAt`. **No `updatedAt`** — append-only |
+| `HealthRecord` | `id`, `petId` (required, cascade), `recordedOn` (date), `condition?`, `diagnosis?` (at least one non-empty), `treatment?`, `prescribedMedication?`, `vetName?`, `createdAt`. **No `updatedAt`** — a correction keeps `createdAt`, so the row's position in the history is stable |
 | `Vaccination` | `id`, `petId` (required, cascade), `vaccineTypeId?`, `vaccineName` (display snapshot, non-empty), `vaccinationDate` (date), `nextDueDate?` (null or **strictly after** `vaccinationDate`), `vetName?`, `createdAt`. No `updatedAt` |
 | `Appointment` | `id`, `petId?` (`null` = household), `clinicName` (non-empty), `purpose` (non-empty), `scheduledAt` (instant), `status` (`scheduled/completed/cancelled/no_show`), `completedAt?`, `cancelReason?`, `createdAt`, `updatedAt`. `completedAt` set **exactly** when completed; `cancelReason` non-empty **exactly** when cancelled |
 | `VaccineType` | `id`, `name` (unique, non-empty), `intervalMonths?` (>0), `isCore`, `sortOrder`. Seeded: Rabies, DHPP, Leptospirosis, Bordetella, FVRCP, FeLV (12 mo each), Deworming (3 mo) |

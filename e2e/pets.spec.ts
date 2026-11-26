@@ -253,9 +253,7 @@ test.describe('pets', () => {
     await expectNoHorizontalOverflow(page, 'pets filtered')
   })
 
-  test('records are append-only: add from the household list, no edit/delete affordance', async ({
-    page,
-  }) => {
+  test('records can be added and corrected from the household list', async ({ page }) => {
     await seedHousehold(page, { pets: [BELLA] })
     await openApp(page, '/records')
     await expect(page.getByTestId('records-empty')).toBeVisible()
@@ -271,14 +269,21 @@ test.describe('pets', () => {
 
     const row = page.locator('[data-testid^="record-row-"]').first()
     await expect(row).toContainText('Ear infection')
-    await expect(page.getByTestId('records-list')).not.toContainText(/edit/i)
-    await expect(page.getByTestId('records-list')).not.toContainText(/delete/i)
     expect(await countStore(page, 'health_record')).toBe(1)
 
-    // The same note appears read-only on the pet's Records tab.
+    // R5 amended: a correction is offered on the row (delete lives in the dialog).
+    await expect(page.getByTestId('records-list')).toContainText(/edit/i)
+    const recordId = ((await row.getAttribute('data-testid')) ?? '').replace('record-row-', '')
+    await page.getByTestId(`record-edit-${recordId}`).click()
+    await page.getByTestId('record-form').locator('#record-diagnosis').fill('Bacterial otitis')
+    await page.getByTestId('record-submit').click()
+    await expect(page.getByTestId('record-form')).toHaveCount(0)
+    await expect(page.getByTestId(`record-row-${recordId}`)).toContainText('Bacterial otitis')
+    expect(await countStore(page, 'health_record')).toBe(1)
+
+    // The same note appears on the pet's Records tab.
     await openApp(page, `/pets/${BELLA.id}/records`)
-    await expect(page.getByTestId('pet-records-list')).toContainText('Ear infection')
-    await expect(page.getByTestId('pet-records-list')).not.toContainText(/delete/i)
+    await expect(page.getByTestId('pet-records-list')).toContainText('Bacterial otitis')
   })
 
   test('a pet detail deep link for a missing pet explains itself', async ({ page }) => {

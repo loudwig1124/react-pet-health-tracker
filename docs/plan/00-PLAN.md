@@ -114,7 +114,7 @@ M5-（behavioural）acceptance in the build team's task contracts.
 Tick what you agree with; anything unticked becomes the next round's discussion instead of code.
 
 - [x] **Stack** — Vite + React Router, Tailwind v4 + shadcn/ui, Dexie over IndexedDB ([01](./01-stack.md))
-- [x] **Data layer and rules** — seven entities, append-only notes, newest-dose rule, local calendar day, demo ownership ([02](./02-parity-and-data.md))
+- [x] **Data layer and rules** — seven entities, correctable clinical notes, newest-dose rule, local calendar day, demo ownership ([02](./02-parity-and-data.md))
 - [x] **Information architecture** — sidebar shell, `/`, `/pets`, `/pets/:petId/:tab?`, `/appointments`, `/vaccinations`, `/records`, `/journal`, `/profile` ([03](./03-ia-layout-motion.md))
 - [x] **Components and tokens** — Flutter palette carried over, shadcn mapping, seven Magic UI additions ([04](./04-components-and-tokens.md))
 - [x] **New desktop features** — Must F1–F6; Should F7–F9 if time allows ([05](./05-new-desktop-features.md))

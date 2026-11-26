@@ -1,6 +1,6 @@
 import { listHealthRecordsForPet } from '@/lib/db/repositories/health-records'
 /**
- * `/records` read model, live (R10). Health records are append-only (R5), so
+ * `/records` read model, live (R10). Health records are correctable (R5), so
  * the household view is assembled from the per-pet read — never by adding an
  * update/delete/list-everything export to the repository. Deleting a pet
  * cascades its notes, so iterating the pet list stays complete.

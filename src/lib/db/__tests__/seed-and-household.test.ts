@@ -189,16 +189,18 @@ describe('pet cascade (02 §3)', () => {
   })
 })
 
-describe('health records are append-only (R5)', () => {
+describe('health records are correctable but never bulk-wiped (R5, amended)', () => {
   beforeEach(async () => {
     await resetDatabaseForTests()
     await ensureOwner(SEED_NOW)
   })
 
-  it('exposes exactly a read and an append', () => {
+  it('exposes read, append and single-row correction — and no bulk wipe', () => {
     expect(Object.keys(healthRecordsModule).sort()).toEqual([
       'appendHealthRecord',
+      'deleteHealthRecord',
       'listHealthRecordsForPet',
+      'updateHealthRecord',
     ])
   })
 

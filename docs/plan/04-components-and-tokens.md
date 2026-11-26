@@ -73,7 +73,7 @@ package with its gzip cost. Shared registry items (Button, Separator, Tooltip) a
 | `/pets/:petId/:tab?` | Tabs (path-addressable), Card, Table, Badge, Button, Dialog, Sheet (row details), Empty, Tooltip | none | Three columns ABOUT / tab panel / context rail; tabs overview · vaccinations · records · appointments · journal |
 | `/appointments` | Tabs (Upcoming/Past) + ToggleGroup (table/calendar), Data Table, Calendar, Badge, DropdownMenu, Dialog, AlertDialog, Field/Input, Tooltip, Empty | table + day-picker | `?view&status&pet&date` deep-linkable; Calendar split into its own chunk |
 | `/vaccinations` | Data Table, ToggleGroup filters, Badge, Button, Dialog, Empty | table | Household-wide doses; filter status / pet / vaccine |
-| `/records` | Table or Card rows, Input search, Badge, Empty, Button | none | Read-only append-only notes; no edit/delete affordances |
+| `/records` | Table or Card rows, Input search, Badge, Empty, Button | none | Notes list with a per-row Edit; the dialog owns delete behind a confirm |
 | `/journal` | Input, Combobox, ToggleGroup, Card rows, Field, Sheet (< 1280), Animated List, DropdownMenu, Empty | cmdk | Three columns: filters · day-grouped feed · inline editor at ≥ 1280 |
 | `/profile` | Card, Field, Input, NativeSelect, Switch, ToggleGroup (density), Button, AlertDialog, Avatar | none | Anchors: owner, pets, preferences, data, about; density affects tables/feeds only |
 | Welcome — mode of `/`, no route | Card, Field, Input, Button, Empty, Dot Pattern | none | Full-window takeover with sidebar and header hidden; three steps; reset-household returns here |

@@ -1,13 +1,19 @@
 /**
- * R5 — clinical notes are append-only.
+ * R5 — clinical notes (amended 2026-11-27, owner decision C).
  *
- * IndexedDB has no triggers, so the guarantee is a repository-surface rule:
- * `src/lib/db/repositories/health-records.ts` exports exactly the read and
- * append operations below — no update, no delete (a test fails if one appears).
- * The only deletion is the pet-delete cascade.
+ * The original rule was append-only: notes could be written but never corrected,
+ * so a misclicked diagnosis was permanent. The owner accepted the trade of
+ * mutability for correctness, so the repository surface is now read + append +
+ * update + delete, and the surface test below asserts exactly that list.
  *
- * This module carries the draft rule (at least one of condition/diagnosis must
- * be non-empty) and the row title, both pure.
+ * What R5 still guarantees:
+ * - a note can never be written without one of condition/diagnosis (the draft
+ *   rule below), and an update re-runs the same rule;
+ * - deleting a pet still removes its records through the pet cascade;
+ * - there is no bulk "clear all records" operation.
+ *
+ * There is deliberately no audit trail: a correction replaces the row. That is
+ * stated in ACCEPTANCE §5d rather than implied.
  */
 
 import { isDateKey } from './calendar'
@@ -20,23 +26,21 @@ import type { DateKey, HealthRecord, HealthRecordDraft } from './types'
 export const HEALTH_RECORD_REPOSITORY_OPERATIONS = [
   'listHealthRecordsForPet',
   'appendHealthRecord',
+  'updateHealthRecord',
+  'deleteHealthRecord',
 ] as const
 
 export type HealthRecordRepositoryOperation = (typeof HEALTH_RECORD_REPOSITORY_OPERATIONS)[number]
 
-/** Operations that must never be exported for clinical notes. */
+/** Operations that must never be exported for clinical notes: bulk wipes. */
 export const HEALTH_RECORD_FORBIDDEN_OPERATIONS = [
-  'update',
-  'updateHealthRecord',
-  'saveHealthRecord',
-  'delete',
-  'deleteHealthRecord',
-  'removeHealthRecord',
   'clearHealthRecords',
+  'resetHealthRecords',
+  'deleteAllHealthRecords',
 ] as const
 
-/** The only allowed deletion path is the pet-delete cascade. */
-export const HEALTH_RECORD_DELETE_PATHS = ['pet-cascade'] as const
+/** Deletion happens one record at a time, or with the pet that owns it. */
+export const HEALTH_RECORD_DELETE_PATHS = ['pet-cascade', 'record-delete'] as const
 
 export type HealthRecordField = 'petId' | 'recordedOn' | 'condition' | 'diagnosis'
 

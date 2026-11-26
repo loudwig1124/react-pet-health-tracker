@@ -22,23 +22,26 @@ const draft = (overrides: Partial<Parameters<typeof validateHealthRecordDraft>[0
   ...overrides,
 })
 
-describe('R5 append-only · repository surface contract', () => {
-  it('accepts: the surface is exactly list + append', () => {
+describe('R5 (amended) · repository surface contract', () => {
+  it('accepts: the surface is read, append and single-row correction', () => {
     expect(HEALTH_RECORD_REPOSITORY_OPERATIONS).toEqual([
       'listHealthRecordsForPet',
       'appendHealthRecord',
+      'updateHealthRecord',
+      'deleteHealthRecord',
     ])
   })
 
-  it('rejects: no update or delete operation can be part of the surface', () => {
+  it('rejects: bulk wipes are still not part of the surface', () => {
     for (const forbidden of HEALTH_RECORD_FORBIDDEN_OPERATIONS) {
       expect(HEALTH_RECORD_REPOSITORY_OPERATIONS as readonly string[]).not.toContain(forbidden)
     }
-    expect(HEALTH_RECORD_DELETE_PATHS).toEqual(['pet-cascade'])
+    // A note disappears one at a time, or with the pet that owns it.
+    expect(HEALTH_RECORD_DELETE_PATHS).toEqual(['pet-cascade', 'record-delete'])
   })
 })
 
-describe('R5 append-only · draft validation', () => {
+describe('R5 (amended) · draft validation', () => {
   it('accepts: condition only, diagnosis only, or both', () => {
     expect(validateHealthRecordDraft(draft()).isValid).toBe(true)
     expect(
