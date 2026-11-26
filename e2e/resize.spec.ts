@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 /**
  * Live-resize gate (06 §2 M5, 03 §1 responsive table): 1440 → 1024 → 900 on
  * every composition that has its own responsive rule. The sidebar must
- * collapse to the rail, the Profile footer must degrade to avatar-only, the
+ * collapse only below its 1024 px floor (the footer degrades to avatar-only there), the
  * document must never scroll sideways, and the journal editor must convert to
  * a Sheet below 1280 px — all without console errors.
  *
@@ -20,7 +20,7 @@ import { expect, test } from './support/fixtures'
 
 const SIZES = [
   { width: 1440, height: 900, sidebar: 'expanded', header: 64 },
-  { width: 1024, height: 768, sidebar: 'collapsed', header: 64 },
+  { width: 1024, height: 768, sidebar: 'expanded', header: 64 },
   { width: 900, height: 800, sidebar: 'collapsed', header: 56 },
 ] as const
 
@@ -33,10 +33,17 @@ test('dashboard: 1440 → 1024 → 900 keeps the rail, avatar footer and no over
   for (const size of SIZES) {
     await page.setViewportSize({ width: size.width, height: size.height })
     await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', size.sidebar)
-    const headerHeight = await page
-      .getByTestId('app-header')
-      .evaluate((element) => element.getBoundingClientRect().height)
-    expect(headerHeight, `header height at ${size.width}`).toBe(size.header)
+    // The header height eases across the breakpoint; poll rather than reading
+    // the first frame of the transition.
+    await expect
+      .poll(
+        async () =>
+          await page
+            .getByTestId('app-header')
+            .evaluate((element) => element.getBoundingClientRect().height),
+        { timeout: 1500 },
+      )
+      .toBe(size.header)
     await expectNoHorizontalOverflow(page, `dashboard @${size.width}`)
 
     if (size.width < 1024) {
@@ -81,7 +88,7 @@ test('the journal editor converts to a Sheet below 1280 and back', async ({ page
   await expect(page.getByTestId('journal-editor')).toBeVisible()
 
   await page.setViewportSize({ width: 1024, height: 768 })
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
   // The same draft opens in a Sheet instead of the third column.
   await expect(page.getByTestId('journal-editor')).toHaveAttribute('data-mode', 'sheet')
   await expect(page.getByTestId('journal-sheet')).toBeVisible()

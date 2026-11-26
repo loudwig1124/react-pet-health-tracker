@@ -345,6 +345,56 @@ function AttentionRail({ attention }: { attention: readonly AttentionDose[] }) {
   )
 }
 
+/**
+ * One row of a two-column list: date, time, description. Shared by the recent
+ * journal and the next visit so a time-stamped event reads the same in both
+ * cards — the visit used to stack a bold date line over an italicised block,
+ * which made two cards on one screen disagree about how an event looks.
+ */
+function EventRow({
+  testId,
+  className,
+  to,
+  day,
+  time,
+  text,
+  trailing,
+}: {
+  testId: string
+  className?: string
+  to?: string
+  day: string
+  time: string
+  text: string
+  trailing?: string
+}) {
+  const content = (
+    <>
+      <span className="text-caption text-muted-foreground w-20 shrink-0 whitespace-nowrap tabular-nums">{day}</span>
+      <span className="text-caption text-muted-foreground w-12 shrink-0 tabular-nums">{time}</span>
+      <span className="text-small min-w-0 flex-1 truncate">{text}</span>
+      {trailing === undefined ? null : (
+        <span className="text-caption text-muted-foreground shrink-0 tabular-nums">{trailing}</span>
+      )}
+    </>
+  )
+
+  return (
+    <li data-testid={testId} className={cn('items-baseline gap-2', className ?? 'flex')}>
+      {to === undefined ? (
+        content
+      ) : (
+        <Link
+          to={to}
+          className="focus-visible:ring-ring flex w-full items-baseline gap-2 rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+        >
+          {content}
+        </Link>
+      )}
+    </li>
+  )
+}
+
 function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardData>> }) {
   const visit = data.nextVisit
   return (
@@ -376,27 +426,18 @@ function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardD
           </Link>
         </div>
       ) : (
-        <>
-          <p className="text-small font-medium">{formatWeekdayDayMonth(visit.day)}</p>
-          <ul className="flex flex-col gap-1">
-            {visit.visits.map((entry) => (
-              <li key={entry.appointment.id} data-testid={`next-visit-row-${entry.appointment.id}`}>
-                <Link
-                  to={`/appointments?status=upcoming&day=${visit.day}`}
-                  className="focus-visible:ring-ring flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md focus-visible:ring-2 focus-visible:outline-none"
-                >
-                  <span className="text-small font-medium">
-                    {formatInstantTime(entry.appointment.scheduledAt)}
-                  </span>
-                  <span className="text-small">{entry.petLabel}</span>
-                  <span className="text-caption text-muted-foreground">
-                    {entry.appointment.purpose}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className="flex flex-col gap-1" data-testid="next-visit-rows">
+          {visit.visits.map((entry) => (
+            <EventRow
+              key={entry.appointment.id}
+              testId={`next-visit-row-${entry.appointment.id}`}
+              to={`/appointments?status=upcoming&day=${visit.day}`}
+              day={formatWeekdayDayMonth(visit.day)}
+              time={formatInstantTime(entry.appointment.scheduledAt)}
+              text={`${entry.petLabel} · ${entry.appointment.purpose}`}
+            />
+          ))}
+        </ul>
       )}
     </section>
   )
@@ -422,27 +463,17 @@ function RecentJournal({ entries, today }: { entries: readonly JournalEntry[]; t
       ) : (
         <ul className="flex flex-col gap-1">
           {entries.map((entry, index) => (
-            <li
+            <EventRow
               key={entry.id}
-              data-testid={`recent-journal-row-${entry.id}`}
+              testId={`recent-journal-row-${entry.id}`}
               className={cn(RECENT_VISIBILITY[index] ?? 'hidden', 'items-baseline gap-2')}
-            >
-              <span className="text-caption text-muted-foreground w-16 shrink-0 tabular-nums">
-                {journalDayLabel(entry, today)}
-              </span>
-              <span className="text-caption text-muted-foreground w-12 shrink-0 tabular-nums">
-                {formatInstantTime(entry.occurredAt)}
-              </span>
-              <span className="text-small min-w-0 flex-1 truncate">
-                {JOURNAL_KIND_LABELS[entry.kind]}
-                {entry.note === null || entry.note.trim() === '' ? '' : ` · ${entry.note}`}
-              </span>
-              {entry.durationMinutes === null ? null : (
-                <span className="text-caption text-muted-foreground shrink-0 tabular-nums">
-                  {entry.durationMinutes} min
-                </span>
-              )}
-            </li>
+              day={journalDayLabel(entry, today)}
+              time={formatInstantTime(entry.occurredAt)}
+              text={`${JOURNAL_KIND_LABELS[entry.kind]}${
+                entry.note === null || entry.note.trim() === '' ? '' : ` · ${entry.note}`
+              }`}
+              trailing={entry.durationMinutes === null ? undefined : `${entry.durationMinutes} min`}
+            />
           ))}
         </ul>
       )}
@@ -539,7 +570,7 @@ export function DashboardOverview() {
        * Row 1 pairs the two list cards (pets with per-pet due chips, needs
        * attention); row 2 pairs next visit with the recent journal.
        */}
-      <div className="grid items-start gap-4 xl:grid-cols-2" data-testid="dashboard-cards">
+      <div className="grid gap-4 xl:grid-cols-2" data-testid="dashboard-cards">
         <HouseholdPets pets={pets} attention={attention.attention} />
         <AttentionRail attention={attention.attention} />
         <NextVisit data={data} />

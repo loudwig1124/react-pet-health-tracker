@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AppProviders } from '@/app/providers'
 import { SidebarAttentionBadge } from '@/components/layout/SidebarAttentionBadge'
@@ -10,6 +10,11 @@ import { createPet } from '@/lib/db/repositories/pets'
 import { appendVaccination } from '@/lib/db/repositories/vaccinations'
 import { addDays, todayKey } from '@/lib/rules/calendar'
 import { resetDatabaseForTests } from '@/test/db-utils'
+
+// A frozen local clock: these tests seed appointments a couple of hours apart
+// and assert they land on one day. With the real clock, a run after ~22:00
+// pushes the second visit past midnight and the grouping silently changes.
+const FROZEN_NOW = new Date('2026-11-26T09:00:00')
 
 function renderBadges() {
   return render(
@@ -23,6 +28,15 @@ function renderBadges() {
 }
 
 describe('F2 sidebar attention counts (05 F2, 06 M5)', () => {
+  beforeAll(() => {
+    // Fake only the Date constructor: fake timers would stall
+    // fake-indexeddb's transaction scheduling.
+    vi.useFakeTimers({ toFake: ['Date'], now: FROZEN_NOW })
+  })
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(async () => {
     window.localStorage.clear()
     await resetDatabaseForTests()

@@ -82,6 +82,24 @@ export function localDateTimeValue(date: Date): string {
 }
 
 /** A Date `offsetMinutes` from now, rounded to a whole minute. */
+/** Today at 09:00 local — the clock the dashboard specs pin the page to. */
+export function todayMorning(): Date {
+  const date = new Date()
+  date.setHours(9, 0, 0, 0)
+  return date
+}
+
+/**
+ * `minutesFromNow(120)` silently becomes *tomorrow* for any run after 22:00,
+ * which turns "1 visit booked today" into zero and moves the next visit off
+ * today's group. These specs pin the page clock to `todayMorning()` and seed
+ * relative to the same instant, so the data and the app agree whatever hour the
+ * suite runs at.
+ */
+export function minutesAfter(base: Date, offsetMinutes: number): Date {
+  return new Date(base.getTime() + offsetMinutes * 60_000)
+}
+
 export function minutesFromNow(offsetMinutes: number): Date {
   const date = new Date()
   date.setSeconds(0, 0)

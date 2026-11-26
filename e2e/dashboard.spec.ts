@@ -1,4 +1,4 @@
-import { localDateISO, minutesFromNow, openApp, readStore } from './support/app'
+import { localDateISO, minutesAfter, openApp, readStore, todayMorning } from './support/app'
 /**
  * M5 · Dashboard overview, sidebar attention counts and the desktop shell
  * extras (06 §2 M5, 05 F1/F2/F4). Counts must come from the same R1/R4 rules as
@@ -8,6 +8,13 @@ import { localDateISO, minutesFromNow, openApp, readStore } from './support/app'
  */
 import { expect, test } from './support/fixtures'
 import { seedHousehold, type SeedPet } from './support/household'
+
+test.beforeEach(async ({ page }) => {
+  // Only the Date constructor is pinned; IndexedDB keeps real timers.
+  await page.clock.setFixedTime(NOW)
+})
+
+const NOW = todayMorning()
 
 const BELLA: SeedPet = { id: 'e2e-pet-bella', name: 'Bella', species: 'Dog', weightKg: 12.4 }
 const MISO: SeedPet = { id: 'e2e-pet-miso', name: 'Miso', species: 'Cat', weightKg: 4.2 }
@@ -37,7 +44,7 @@ const dueData = {
     {
       id: 'e2e-visit-today',
       petId: BELLA.id,
-      scheduledAt: minutesFromNow(120).toISOString(),
+      scheduledAt: minutesAfter(NOW, 120).toISOString(),
       clinicName: 'Paws & Claws',
       purpose: 'Today check',
     },
@@ -46,7 +53,7 @@ const dueData = {
     id: `e2e-journal-${index}`,
     petId: BELLA.id,
     kind: 'walk' as const,
-    occurredAt: minutesFromNow(-index * 60).toISOString(),
+    occurredAt: minutesAfter(NOW, -index * 60).toISOString(),
     note: `Journal row ${index}`,
   })),
 }

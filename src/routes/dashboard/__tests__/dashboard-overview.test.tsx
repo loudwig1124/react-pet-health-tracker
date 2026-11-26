@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createAppointment } from '@/lib/db/repositories/appointments'
 import { createJournalEntry } from '@/lib/db/repositories/journal'
@@ -19,7 +19,12 @@ function renderDashboard() {
   )
 }
 
-const NOW = new Date()
+// A frozen local clock: these tests seed appointments a couple of hours apart
+// and assert they land on one day. With the real clock, a run after ~22:00
+// pushes the second visit past midnight and the grouping silently changes.
+const FROZEN_NOW = new Date('2026-11-26T09:00:00')
+
+const NOW = FROZEN_NOW
 const TODAY = todayKey(NOW)
 
 interface SeededAttention {
@@ -114,6 +119,15 @@ async function seedHousehold(): Promise<SeededAttention> {
 }
 
 describe('F1 dashboard overview (05 F1, 06 M5)', () => {
+  beforeAll(() => {
+    // Fake only the Date constructor: fake timers would stall
+    // fake-indexeddb's transaction scheduling.
+    vi.useFakeTimers({ toFake: ['Date'], now: FROZEN_NOW })
+  })
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(async () => {
     window.innerWidth = 1440
     window.localStorage.clear()
