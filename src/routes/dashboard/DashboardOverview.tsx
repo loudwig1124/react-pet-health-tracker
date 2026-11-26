@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, NotebookPen, PawPrint } from 'lucide-react'
+import { ArrowRight, CalendarDays } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 
@@ -545,36 +545,6 @@ export function DashboardOverview() {
         <NextVisit data={data} />
         <RecentJournal entries={recentJournal} today={attention.today} />
       </div>
-
-      {/*
-       * Three household links, one style: the sidebar's own row metrics
-       * (40 px tall, 12 px padding, 4 px radius, 14 px label). Previously the
-       * journal was a bordered button while the other two were bare text links,
-       * which read as two different weights of action.
-       */}
-      <section className="flex flex-wrap items-center gap-2" aria-label="Household links">
-        <Link
-          to="/journal"
-          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <NotebookPen aria-hidden="true" className="size-4" />
-          Open the journal
-        </Link>
-        <Link
-          to="/appointments"
-          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <CalendarDays aria-hidden="true" className="size-4" />
-          Appointments
-        </Link>
-        <Link
-          to="/records"
-          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        >
-          <PawPrint aria-hidden="true" className="size-4" />
-          Health records
-        </Link>
-      </section>
     </div>
   )
 }
