@@ -87,68 +87,54 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
     >
       <div
         className={cn(
-          'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b',
-          rail ? 'justify-center px-0' : 'justify-between gap-2 px-4',
+          'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b gap-2',
+          rail ? 'px-4' : 'px-4',
         )}
       >
-        {rail ? (
-          /*
-           * Collapsed: one control, and it is the expand icon rather than the
-           * brand. The paw keeps its meaning (a link home) wherever it is
-           * visible, and a 72 px rail cannot hold a brand and a button without
-           * the two crowding each other. Where the rail is forced (<1024) there
-           * is nothing to expand, so the paw is shown as a static mark.
-           */
-          showToggle ? (
-            <button
-              type="button"
-              aria-label="Expand sidebar"
-              aria-pressed={open}
-              title="Expand sidebar"
-              onClick={onToggle}
-              data-testid="sidebar-toggle"
-              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-10 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <PanelLeft aria-hidden="true" className="size-4" />
-            </button>
-          ) : (
-            <span
-              aria-hidden="true"
-              data-testid="sidebar-brand"
-              className="bg-accent-soft text-primary flex size-8 items-center justify-center rounded-lg"
-            >
-              <PawPrint className="size-4" strokeWidth={2.25} />
-            </span>
-          )
-        ) : (
-          <>
-            <Link
-              to="/"
-              aria-label="Pet Health Tracker — Dashboard"
-              data-testid="sidebar-brand"
-              className="focus-visible:ring-sidebar-ring flex min-w-0 items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <span className="bg-accent-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
-                <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
-              </span>
-              <span className="text-small truncate font-semibold tracking-tight">
-                Pet Health Tracker
-              </span>
-            </Link>
+        {/* One row in both states: the name collapses while the paw and the
+            toggle stay, so collapsing the sidebar slides the content instead of
+            swapping it for a different set of elements. */}
+        <Link
+          to="/"
+          aria-label="Pet Health Tracker — Dashboard"
+          data-testid="sidebar-brand"
+          tabIndex={rail ? -1 : 0}
+          aria-hidden={rail ? true : undefined}
+          className="focus-visible:ring-sidebar-ring flex min-w-0 items-center gap-2.5 overflow-hidden rounded-md transition-[max-width,opacity] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)] focus-visible:ring-2 focus-visible:outline-none"
+          // Collapsed: the mark stays only where the rail is forced (nothing to
+          // expand to); where a toggle exists the mark gives way to it.
+          style={{ maxWidth: rail ? 32 : 200, opacity: rail && showToggle ? 0 : 1 }}
+        >
+          <span className="bg-accent-soft text-primary flex size-8 shrink-0 items-center justify-center rounded-lg">
+            <PawPrint aria-hidden="true" className="size-4" strokeWidth={2.25} />
+          </span>
+          <span className="text-small truncate font-semibold tracking-tight">
+            Pet Health Tracker
+          </span>
+        </Link>
 
-            <button
-              type="button"
-              aria-label="Collapse sidebar"
-              aria-pressed={open}
-              title="Collapse sidebar"
-              onClick={onToggle}
-              data-testid="sidebar-toggle"
-              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <PanelLeft aria-hidden="true" className="size-4" />
-            </button>
-          </>
-        )}
+        {/*
+         * The rail toggle lives here, not in the page header: the header then
+         * holds only the title, which lines up with the cards, and the button
+         * gets real air on both sides instead of being wedged between the
+         * sidebar edge and the title.
+         */}
+        {showToggle ? (
+          <button
+            type="button"
+            aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-pressed={open}
+            title={open ? 'Collapse sidebar' : 'Expand sidebar'}
+            onClick={onToggle}
+            data-testid="sidebar-toggle"
+            className={cn(
+              'hover:bg-sidebar-accent focus-visible:ring-sidebar-ring ml-auto inline-flex shrink-0 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none',
+              rail ? 'size-10' : 'size-8',
+            )}
+          >
+            <PanelLeft aria-hidden="true" className="size-4" />
+          </button>
+        ) : null}
       </div>
 
       <nav
@@ -176,9 +162,14 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                 aria-current={active ? 'page' : undefined}
                 data-testid={`nav-${item.key}`}
                 data-active={active}
+                style={{
+                  width: rail
+                    ? 'calc(var(--sidebar-width-rail) - 2rem)'
+                    : 'calc(var(--sidebar-width) - 2rem)',
+                }}
                 className={cn(
-                  'app-nav-item group flex h-10 items-center gap-2.5 rounded-md px-2 text-small text-sidebar-foreground/85',
-                  'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
+                  'app-nav-item group flex h-10 items-center gap-2.5 overflow-hidden rounded-md px-2 text-small text-sidebar-foreground/85',
+                  'transition-[width,background-color,color,padding] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]',
                   'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                   'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
                   // Every control in the sidebar keeps one 16 px inset from the
@@ -186,28 +177,23 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                   // the collapsed nav and the full-width rows when expanded. The
                   // pill, the hover band and the 3 px active marker therefore
                   // never move sideways when the sidebar is collapsed.
-                  rail && 'mx-auto w-10 justify-center rounded-lg px-0',
+                  rail && 'mx-auto justify-center rounded-lg px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >
                 <Icon aria-hidden="true" className="app-nav-icon size-4 shrink-0" />
-                {rail ? (
-                  badgeKind === null ? null : (
+                <span
+                  className="truncate transition-[max-width,opacity] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]"
+                  style={{ maxWidth: rail ? 0 : 200, opacity: rail ? 0 : 1 }}
+                >
+                  {item.label}
+                </span>
+                {badgeKind === null ? null : (
+                  <span className="ml-auto flex shrink-0 items-center">
                     <Suspense fallback={null}>
-                      <SidebarAttentionBadge kind={badgeKind} rail />
+                      <SidebarAttentionBadge kind={badgeKind} rail={rail} />
                     </Suspense>
-                  )
-                ) : (
-                  <>
-                    <span className="truncate">{item.label}</span>
-                    {badgeKind === null ? null : (
-                      <span className="ml-auto flex shrink-0 items-center">
-                        <Suspense fallback={null}>
-                          <SidebarAttentionBadge kind={badgeKind} />
-                        </Suspense>
-                      </span>
-                    )}
-                  </>
+                  </span>
                 )}
               </Link>
             )
