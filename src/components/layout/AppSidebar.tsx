@@ -8,7 +8,7 @@ import {
   Syringe,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -28,6 +28,9 @@ const SidebarAttentionBadge = lazy(() =>
     default: module.SidebarAttentionBadge,
   })),
 )
+
+/** Mirrors --dur-sidebar; the rail layout waits for the width slide to finish. */
+const SLIDE_MS = 180
 
 const NAV_ICONS: Record<AppDestinationKey, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -74,7 +77,32 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
   const { pathname } = useLocation()
   const owner = useOwnerIdentity()
 
-  const rail = !open
+  /*
+   * The box slides on `open` (the width transition below), but the *inner*
+   * layout switches to the rail's icon-only form. Doing both in the same frame
+   * is what made collapsing look like a teleport — the labels, brand and footer
+   * vanished before the box had moved. So the rail layout waits for the slide
+   * when collapsing, and applies at once when expanding (the labels are then
+   * revealed by the widening box).
+   */
+  const [railContent, setRailContent] = useState(!open)
+  useEffect(() => {
+    if (!open) {
+      const reduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (reduced) {
+        setRailContent(true)
+        return
+      }
+      const timer = setTimeout(() => setRailContent(true), SLIDE_MS)
+      return () => clearTimeout(timer)
+    }
+    setRailContent(false)
+    return
+  }, [open])
+
+  const rail = railContent
 
   return (
     <aside
@@ -140,17 +168,22 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
               </span>
             </Link>
 
-            <button
-              type="button"
-              aria-label="Collapse sidebar"
-              aria-pressed={open}
-              title="Collapse sidebar"
-              onClick={onToggle}
-              data-testid="sidebar-toggle"
-              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
-            >
-              <PanelLeft aria-hidden="true" className="size-4" />
-            </button>
+            {/* Gated like the rail branch: while the box slides to a forced
+                rail this markup is still on screen for one slide, and a
+                collapse control there would be a dead button. */}
+            {showToggle ? (
+              <button
+                type="button"
+                aria-label="Collapse sidebar"
+                aria-pressed={open}
+                title="Collapse sidebar"
+                onClick={onToggle}
+                data-testid="sidebar-toggle"
+                className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--radius)] transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <PanelLeft aria-hidden="true" className="size-4" />
+              </button>
+            ) : null}
           </>
         )}
       </div>
