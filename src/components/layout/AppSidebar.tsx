@@ -177,11 +177,13 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                 data-testid={`nav-${item.key}`}
                 data-active={active}
                 className={cn(
-                  'app-nav-item group flex h-9 items-center gap-2.5 rounded-md px-2 text-small text-sidebar-foreground/85',
+                  'app-nav-item group flex h-10 items-center gap-2.5 rounded-md px-2 text-small text-sidebar-foreground/85',
                   'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
                   'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                   'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
-                  rail && 'mx-auto h-10 w-10 justify-center px-0',
+                  // Same box in both modes: the rail only narrows it, it never changes the
+                  // height, so the vertical rhythm is identical expanded or collapsed.
+                  rail && 'mx-auto w-10 justify-center px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >
