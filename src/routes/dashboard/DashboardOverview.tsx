@@ -311,7 +311,7 @@ function AttentionRail({ attention }: { attention: readonly AttentionDose[] }) {
 
       <Link
         to="/vaccinations"
-        className="text-caption text-primary focus-visible:ring-ring mt-auto inline-flex items-center gap-1 rounded-sm pt-1 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+        className="text-caption text-primary focus-visible:ring-ring inline-flex w-fit items-center gap-1 rounded-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
       >
         View all vaccinations
         <ArrowRight aria-hidden="true" className="size-3" />
@@ -330,9 +330,19 @@ function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardD
     >
       <h2 className="text-overline text-muted-foreground">Next visit</h2>
       {visit === null ? (
-        <p className="text-small text-muted-foreground" data-testid="next-visit-empty">
-          No visit booked. Schedule one from Appointments.
-        </p>
+        <div className="flex flex-col gap-3" data-testid="next-visit-empty">
+          <p className="text-small text-muted-foreground">
+            No visit booked. Schedule one from Appointments.
+          </p>
+          <Link
+            to="/appointments"
+            data-testid="next-visit-book"
+            className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 w-fit items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <CalendarDays aria-hidden="true" className="size-4" />
+            Book a visit
+          </Link>
+        </div>
       ) : (
         <>
           <p className="text-small font-medium">{formatWeekdayDayMonth(visit.day)}</p>
@@ -359,7 +369,7 @@ function NextVisit({ data }: { data: NonNullable<ReturnType<typeof useDashboardD
 
       <Link
         to="/appointments"
-        className="text-caption text-primary focus-visible:ring-ring mt-auto inline-flex items-center gap-1 rounded-sm pt-1 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+        className="text-caption text-primary focus-visible:ring-ring inline-flex w-fit items-center gap-1 rounded-sm hover:underline focus-visible:ring-2 focus-visible:outline-none"
       >
         All appointments
         <ArrowRight aria-hidden="true" className="size-3" />
@@ -512,24 +522,30 @@ export function DashboardOverview() {
         <RecentJournal entries={recentJournal} today={attention.today} />
       </div>
 
+      {/*
+       * Three household links, one style: the sidebar's own row metrics
+       * (40 px tall, 12 px padding, 4 px radius, 14 px label). Previously the
+       * journal was a bordered button while the other two were bare text links,
+       * which read as two different weights of action.
+       */}
       <section className="flex flex-wrap items-center gap-2" aria-label="Household links">
         <Link
           to="/journal"
-          className="border-border bg-background hover:bg-muted focus-visible:ring-ring inline-flex h-8 items-center justify-center gap-1 rounded-[var(--radius)] border px-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <NotebookPen aria-hidden="true" className="size-4" />
           Open the journal
         </Link>
         <Link
           to="/appointments"
-          className="text-small text-primary inline-flex items-center gap-1 hover:underline"
+          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <CalendarDays aria-hidden="true" className="size-4" />
           Appointments
         </Link>
         <Link
           to="/records"
-          className="text-small text-primary inline-flex items-center gap-1 hover:underline"
+          className="border-border bg-background hover:bg-muted focus-visible:ring-ring text-small inline-flex h-10 items-center gap-2 rounded-md border px-3 font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <PawPrint aria-hidden="true" className="size-4" />
           Health records

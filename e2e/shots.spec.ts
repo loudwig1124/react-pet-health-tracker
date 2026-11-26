@@ -57,6 +57,9 @@ const ALL_ROUTES = [
 ] as const
 
 const ALL_SIZES = [
+  // A 1920 capture is the wide-screen check the owner actually uses; the others
+  // are the documented desktop / rail widths.
+  { width: 1920, height: 1080 },
   { width: 1440, height: 900 },
   { width: 1024, height: 768 },
   { width: 900, height: 800 },
