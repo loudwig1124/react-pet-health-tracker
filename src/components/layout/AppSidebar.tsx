@@ -181,9 +181,12 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                   'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
                   'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                   'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
-                  // Same box in both modes: the rail only narrows it, it never changes the
-                  // height, so the vertical rhythm is identical expanded or collapsed.
-                  rail && 'mx-auto w-10 justify-center px-0',
+                  // Same row box in both modes: it keeps the nav's 8 px inset and
+                  // only loses width, so the pill, the hover band and the 3 px
+                  // active marker sit at the same distance from the edge whether
+                  // the sidebar is open or collapsed. (A 40 px centred tile left
+                  // a 16 px margin collapsed against 8 px expanded.)
+                  rail && 'justify-center px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >

@@ -60,7 +60,14 @@ export function SidebarAttentionBadge({ kind, rail = false }: SidebarAttentionBa
         data-count={count}
         title={split}
         aria-label={split}
-        className={cn(BADGE_BASE, toneClass(kind, hasOverdue), 'absolute -top-0.5 -right-0.5')}
+        // Inside the 40 px tile, never over its edge: a badge that hangs out by
+        // 2 px makes that one row wider than the others, so the rail's equal
+        // left/right margins stop being equal.
+        className={cn(
+          BADGE_BASE,
+          toneClass(kind, hasOverdue),
+          'ring-sidebar absolute top-0 right-0 ring-2',
+        )}
       >
         <span aria-hidden="true">{count}</span>
       </span>
