@@ -120,7 +120,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       <div
         className={cn(
           'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b',
-          rail ? 'justify-center px-0' : 'justify-between gap-2 px-4',
+          rail ? 'justify-start px-4' : 'justify-between gap-2 px-4',
         )}
       >
         {rail ? (
@@ -139,7 +139,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
               title="Expand sidebar"
               onClick={onToggle}
               data-testid="sidebar-toggle"
-              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-10 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex h-10 w-8 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
             >
               <PanelLeft aria-hidden="true" className="size-4" />
             </button>
@@ -223,7 +223,11 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                   // the collapsed nav and the full-width rows when expanded. The
                   // pill, the hover band and the 3 px active marker therefore
                   // never move sideways when the sidebar is collapsed.
-                  rail && 'mx-auto w-10 justify-center rounded-lg px-0',
+                  // Compressed: a 32 px tile starting on the same 16 px inset as
+                  // the expanded rows. Its icon therefore lands on the exact
+                  // column the expanded icons use (16 + 8 = 24 px), so the icon
+                  // never shifts when the sidebar collapses.
+                  rail && 'w-8 justify-center rounded-lg px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >
@@ -278,7 +282,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                 aria-label={owner ? `Profile — ${owner.name}` : 'Profile'}
                 data-testid="nav-profile"
                 data-active={isDestinationActive(pathname, PROFILE_PATH)}
-                className="app-nav-item focus-visible:ring-sidebar-ring hover:bg-sidebar-accent mx-auto flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
+                className="app-nav-item focus-visible:ring-sidebar-ring hover:bg-sidebar-accent flex h-10 w-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
               >
                 <OwnerAvatar ownerName={owner?.name} />
               </Link>
