@@ -88,7 +88,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       <div
         className={cn(
           'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b',
-          rail ? 'justify-center px-0' : 'justify-between gap-2 px-3',
+          rail ? 'justify-center px-0' : 'justify-between gap-2 px-4',
         )}
       >
         {rail ? (
@@ -152,7 +152,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       </div>
 
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-4"
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4"
         aria-label="Primary"
       >
         {/*
@@ -181,12 +181,12 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                   'transition-colors duration-[var(--dur-fast)] ease-[var(--ease-standard)]',
                   'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                   'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none',
-                  // Same row box in both modes: it keeps the nav's 8 px inset and
-                  // only loses width, so the pill, the hover band and the 3 px
-                  // active marker sit at the same distance from the edge whether
-                  // the sidebar is open or collapsed. (A 40 px centred tile left
-                  // a 16 px margin collapsed against 8 px expanded.)
-                  rail && 'justify-center px-0',
+                  // Every control in the sidebar keeps one 16 px inset from the
+                  // rail's edge: the brand mark, the toggle, the 40 px squares of
+                  // the collapsed nav and the full-width rows when expanded. The
+                  // pill, the hover band and the 3 px active marker therefore
+                  // never move sideways when the sidebar is collapsed.
+                  rail && 'mx-auto w-10 justify-center rounded-lg px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >
@@ -231,8 +231,8 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
       </nav>
 
       {/* A plain hairline keeps radix Separator out of the eager shell (size gate). */}
-      <div className="bg-border mx-2 h-px shrink-0" role="presentation" />
-      <div className="shrink-0 p-2">
+      <div className="bg-border mx-4 h-px shrink-0" role="presentation" />
+      <div className="shrink-0 px-4 py-2">
         {rail ? (
           <Tooltip>
             <TooltipTrigger asChild>
