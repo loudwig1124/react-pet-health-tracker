@@ -32,6 +32,11 @@ import {
   toVaccinationViews,
   vaccinationSortChange,
 } from '@/lib/schedule/vaccinations'
+import {
+  showVaccinationCreatedToast,
+  showVaccinationDeletedToast,
+  showVaccinationUpdatedToast,
+} from '@/lib/vaccination-actions'
 import { VaccinationDialog } from '@/routes/vaccinations/components/VaccinationDialog'
 import { VaccinationsTable } from '@/routes/vaccinations/components/VaccinationsTable'
 import { useVaccinationsData } from '@/routes/vaccinations/useVaccinationsData'
@@ -45,6 +50,8 @@ export function PetVaccinationsTab({ pet }: PetVaccinationsTabProps) {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = useMemo(() => parseVaccinationSearch(searchParams), [searchParams])
   const { message, announce } = useAnnouncement()
+  // The dose being corrected on this tab, or null when adding a new one.
+  const [editingDose, setEditingDose] = useState<Vaccination | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const data = state.kind === 'ready' ? state.data : null
@@ -86,8 +93,18 @@ export function PetVaccinationsTab({ pet }: PetVaccinationsTabProps) {
   )
 
   function handleSaved(dose: Vaccination): void {
-    announce(`Vaccination added for ${pet.name}.`)
-    void dose
+    if (editingDose === null) {
+      announce(`Vaccination added for ${pet.name}.`)
+      showVaccinationCreatedToast(dose, pet.name)
+      return
+    }
+    announce(`Vaccination updated for ${pet.name}.`)
+    showVaccinationUpdatedToast(dose, pet.name)
+  }
+
+  function handleDeleted(dose: Vaccination): void {
+    announce('Vaccination deleted.')
+    showVaccinationDeletedToast(dose)
   }
 
   return (
@@ -176,7 +193,14 @@ export function PetVaccinationsTab({ pet }: PetVaccinationsTabProps) {
             views={sortedViews}
             search={search}
             onSort={changeSort}
-            onAddDose={() => setDialogOpen(true)}
+            onAddDose={() => {
+              setEditingDose(null)
+              setDialogOpen(true)
+            }}
+            onEditDose={(dose) => {
+              setEditingDose(dose)
+              setDialogOpen(true)
+            }}
           />
         </div>
       ) : null}
@@ -189,7 +213,9 @@ export function PetVaccinationsTab({ pet }: PetVaccinationsTabProps) {
           vaccineTypes={data.vaccineTypes}
           defaultPetId={pet.id}
           today={today}
+          initial={editingDose}
           onSaved={handleSaved}
+          onDeleted={handleDeleted}
         />
       ) : null}
     </div>

@@ -44,3 +44,41 @@ export async function appendVaccination(
   await db.vaccination.add(dose)
   return dose
 }
+
+/**
+ * Corrects a dose in place (owner decision A, 2026-11-27).
+ *
+ * Doses are appended, never rewritten historically — but a misclicked vaccine or
+ * date is otherwise permanent, so the row can be corrected. `id` and `createdAt`
+ * are preserved (the R1 tie-break keeps its original position for an unchanged
+ * date), and the same draft schema as `appendVaccination` re-validates the edit,
+ * so an edited row can never be in a state a new row could not be.
+ */
+export async function updateVaccination(id: string, draft: VaccinationDraft): Promise<Vaccination> {
+  const parsed = parseRow(vaccinationDraftSchema, draft, 'vaccination draft')
+  const existing = await db.vaccination.get(id)
+  if (existing === undefined) {
+    throw new Error(`Vaccination ${id} does not exist.`)
+  }
+  const pet = await db.pet.get(parsed.petId)
+  if (pet === undefined) {
+    throw new Error(`Pet ${parsed.petId} does not exist.`)
+  }
+  const dose = parseRow(
+    vaccinationSchema,
+    {
+      ...existing,
+      ...parsed,
+      id: existing.id,
+      createdAt: existing.createdAt,
+    },
+    'vaccination',
+  )
+  await db.vaccination.put(dose)
+  return dose
+}
+
+/** Removes a dose the owner deleted (the dialog asks first). */
+export async function deleteVaccination(id: string): Promise<void> {
+  await db.vaccination.delete(id)
+}

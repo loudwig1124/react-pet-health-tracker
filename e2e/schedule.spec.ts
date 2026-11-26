@@ -87,6 +87,57 @@ test.describe('vaccinations', () => {
     expect(doses).toHaveLength(2)
   })
 
+  test('a misclicked dose can be corrected, deleted, and undone after recording', async ({
+    page,
+  }) => {
+    await seedHousehold(page, {
+      pets: [BISCUIT],
+      vaccinations: [
+        {
+          id: 'e2e-dose-typo',
+          petId: BISCUIT.id,
+          vaccineName: 'Rabies',
+          vaccineTypeId: 'vaccine-rabies',
+          // The misclick: a year too early, so the pet reads overdue.
+          vaccinationDate: localDateISO(-400),
+          nextDueDate: localDateISO(-35),
+        },
+      ],
+    })
+    await openApp(page, '/vaccinations')
+    const row = page.getByTestId('vaccination-row-e2e-dose-typo')
+    await expect(row).toContainText('Overdue')
+
+    // Correct the date: the row and its status update without a new row.
+    await page.getByTestId('vaccination-edit-e2e-dose-typo').click()
+    const form = page.getByTestId('vaccination-form')
+    await expect(form).toBeVisible()
+    await expect(page.getByTestId('vaccination-date')).not.toHaveValue('')
+    await page.getByTestId('vaccination-date').fill(localDateISO(-2))
+    await page.getByTestId('vaccination-submit').click()
+    await expect(form).toHaveCount(0)
+    await expect(row).not.toContainText('Overdue')
+    await expect(page.locator('[data-testid^="vaccination-row-"]')).toHaveCount(1)
+
+    // Delete asks once, then removes the row.
+    await page.getByTestId('vaccination-edit-e2e-dose-typo').click()
+    const remove = page.getByTestId('vaccination-delete')
+    await remove.click()
+    await expect(remove).toHaveText('Delete permanently?')
+    await expect(row).toBeVisible()
+    await remove.click()
+    await expect(page.locator('[data-testid^="vaccination-row-"]')).toHaveCount(0)
+
+    // Recording a dose offers a three-second Undo, the same contract as the journal.
+    await page.getByTestId('vaccination-add').click()
+    await page.getByTestId('vaccination-pet').selectOption(BISCUIT.id)
+    await page.getByTestId('vaccination-vaccine').selectOption('vaccine-rabies')
+    await page.getByTestId('vaccination-submit').click()
+    await expect(page.locator('[data-testid^="vaccination-row-"]')).toHaveCount(1)
+    await page.getByTestId('vaccination-undo').click()
+    await expect(page.locator('[data-testid^="vaccination-row-"]')).toHaveCount(0)
+  })
+
   test('status, pet and sort state live in the URL and survive reload', async ({ page }) => {
     await seedHousehold(page, {
       pets: [BISCUIT, { id: 'e2e-pet-miso', name: 'Miso', species: 'Cat', weightKg: 4.2 }],

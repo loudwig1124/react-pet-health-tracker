@@ -21,7 +21,11 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { appendVaccination } from '@/lib/db/repositories/vaccinations'
+import {
+  appendVaccination,
+  deleteVaccination,
+  updateVaccination,
+} from '@/lib/db/repositories/vaccinations'
 import { isDateKey } from '@/lib/rules/calendar'
 import type { Pet, Vaccination, VaccineType } from '@/lib/rules/types'
 import { isValidNextDueDate, nextDueFromInterval } from '@/lib/rules/vaccination-due'
@@ -36,7 +40,11 @@ export interface VaccinationDialogProps {
   defaultPetId: string | null
   /** The local "today" from the page, so defaults are deterministic in tests. */
   today: string
+  /** The dose being corrected; absent for "Add vaccination". */
+  initial?: Vaccination | null
   onSaved: (dose: Vaccination) => void
+  /** Called after the owner confirms Delete; the page announces it. */
+  onDeleted?: (dose: Vaccination) => void
 }
 
 interface FormState {
@@ -60,7 +68,17 @@ function initialState(
   vaccineTypes: readonly VaccineType[],
   defaultPetId: string | null,
   today: string,
+  initial: Vaccination | null,
 ): FormState {
+  if (initial !== null) {
+    return {
+      petId: initial.petId,
+      vaccineId: initial.vaccineTypeId ?? vaccineTypes[0]?.id ?? '',
+      vaccinationDate: initial.vaccinationDate,
+      nextDueDate: initial.nextDueDate ?? '',
+      vetName: initial.vetName ?? '',
+    }
+  }
   const petId =
     defaultPetId !== null && pets.some((pet) => pet.id === defaultPetId)
       ? defaultPetId
@@ -83,12 +101,20 @@ export function VaccinationDialog({
   vaccineTypes,
   defaultPetId,
   today,
+  initial = null,
   onSaved,
+  onDeleted,
 }: VaccinationDialogProps) {
+  const editing = initial !== null
   const [form, setForm] = useState<FormState>(() =>
-    initialState(pets, vaccineTypes, defaultPetId, today),
+    initialState(pets, vaccineTypes, defaultPetId, today, initial),
   )
+  // False in edit mode too: correcting the dose date must re-derive the next
+  // due date, or the stale date sits before the new one and the edit is
+  // rejected by the same rule that guards creation.
   const [nextDueTouched, setNextDueTouched] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [pending, setPending] = useState(false)
 
@@ -145,14 +171,18 @@ export function VaccinationDialog({
     }
     setPending(true)
     try {
-      const dose = await appendVaccination({
+      const draft = {
         petId: form.petId,
         vaccineTypeId: selectedVaccine.id,
         vaccineName: selectedVaccine.name,
         vaccinationDate: form.vaccinationDate,
         nextDueDate: form.nextDueDate === '' ? null : form.nextDueDate,
         vetName: form.vetName.trim() === '' ? null : form.vetName.trim(),
-      })
+      }
+      const dose =
+        initial === null
+          ? await appendVaccination(draft)
+          : await updateVaccination(initial.id, draft)
       onSaved(dose)
       onOpenChange(false)
     } catch (error) {
@@ -169,10 +199,11 @@ export function VaccinationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add vaccination</DialogTitle>
+          <DialogTitle>{editing ? 'Edit vaccination' : 'Add vaccination'}</DialogTitle>
           <DialogDescription>
-            Record a dose for one pet. The newest dose of each vaccine decides the pet&apos;s
-            status.
+            {editing
+              ? 'Correct the dose. The newest dose of each vaccine decides the pet’s status.'
+              : 'Record a dose for one pet. The newest dose of each vaccine decides the pet’s status.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -272,11 +303,38 @@ export function VaccinationDialog({
             </div>
 
             <DialogFooter className="mt-6">
+              {editing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive sm:mr-auto"
+                  data-testid="vaccination-delete"
+                  disabled={pending || deleting}
+                  onClick={() => {
+                    if (!confirmingDelete) {
+                      setConfirmingDelete(true)
+                      return
+                    }
+                    setDeleting(true)
+                    void deleteVaccination(initial.id)
+                      .then(() => {
+                        onDeleted?.(initial)
+                        onOpenChange(false)
+                      })
+                      .catch((error: unknown) => {
+                        setErrors({ submit: errorMessage(error) })
+                        setDeleting(false)
+                      })
+                  }}
+                >
+                  {confirmingDelete ? 'Delete permanently?' : 'Delete dose'}
+                </Button>
+              ) : null}
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={pending} data-testid="vaccination-submit">
-                {pending ? 'Saving…' : 'Add dose'}
+                {pending ? 'Saving…' : editing ? 'Save changes' : 'Add dose'}
               </Button>
             </DialogFooter>
           </form>

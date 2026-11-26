@@ -47,6 +47,7 @@ Priority is the heading; each row carries value, IA location, effort and risk. N
 
 | Candidate | Verdict | Reason |
 | --- | --- | --- |
+| Doses can be corrected | **Accept as A + C** (owner, 2026-11-27) | Edit in place + delete with a confirm, and a 3 s Undo on record. Corrections rewrite history (no audit trail) — option B (void + replace) was declined for a single-household notebook. |
 | Home as a real dashboard | **Accept** as F1/F2 | Reshape "stat cards" into a compact four-card strip and keep the needs-attention rail; quick log and recent journal stay parity. 03's hand-off asked 05 to decide: **larger cards yes, hero tiles no.** |
 | Tables: sorting, filtering, column visibility | **Accept sort/filter** (F5/F6), **reject visibility** (F13) | Sorting and status/pet filters are the desktop payoff; hiding columns at six–eight columns adds state for no gain. |
 | Global search / command palette | **Accept** (F3), scoped | Simple substring matching and 8 results per group; no fuzzy ranking or date parsing in v1; navigation and create share one surface. |

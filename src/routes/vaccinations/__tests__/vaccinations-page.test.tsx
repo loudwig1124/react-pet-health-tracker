@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { Toaster } from '@/components/layout/Toaster'
 import { createPet } from '@/lib/db/repositories/pets'
 import { appendVaccination } from '@/lib/db/repositories/vaccinations'
 import { seedVaccineCatalog, VACCINE_TYPE_IDS } from '@/lib/db/seed/catalog'
@@ -18,6 +19,9 @@ function renderPage(search = ''): ReturnType<typeof render> {
       <Routes>
         <Route path="/vaccinations" element={<VaccinationsPage />} />
       </Routes>
+      {/* The page raises toasts through the shell store, so the Toaster has to
+          be mounted here for the Undo affordance to exist. */}
+      <Toaster />
     </MemoryRouter>,
   )
 }
@@ -140,6 +144,69 @@ describe('/vaccinations (M3)', () => {
       expect(screen.getAllByTestId(/^vaccination-row-/)).toHaveLength(2)
     })
     expect(screen.getByTestId('vaccinations-announcement')).toHaveTextContent('Vaccination added')
+  })
+
+  it('corrects a misclicked dose from the row and re-derives the status', async () => {
+    const { petId, doseId } = await seedOverduePet()
+    renderPage(`?pet=${petId}`)
+
+    const row = await screen.findByTestId(`vaccination-row-${doseId}`)
+    expect(within(row).getByTestId('due-chip-overdue')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId(`vaccination-edit-${doseId}`))
+    const form = await screen.findByTestId('vaccination-form')
+    // Prefilled from the stored dose, not from today's defaults.
+    const given = within(form).getByTestId('vaccination-date') as HTMLInputElement
+    expect(given.value).toBe(addDays(TODAY, -375))
+
+    // The misclick was the year; correcting it clears the overdue status.
+    fireEvent.change(given, { target: { value: localToday() } })
+    fireEvent.click(within(form).getByTestId('vaccination-submit'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('vaccinations-announcement')).toHaveTextContent(
+        'Vaccination updated',
+      )
+    })
+    await waitFor(() => {
+      expect(screen.queryByTestId('due-chip-overdue')).not.toBeInTheDocument()
+    })
+  })
+
+  it('deletes a dose only after the second confirmation click', async () => {
+    const { petId, doseId } = await seedOverduePet()
+    renderPage(`?pet=${petId}`)
+    await screen.findByTestId(`vaccination-row-${doseId}`)
+
+    fireEvent.click(screen.getByTestId(`vaccination-edit-${doseId}`))
+    const deleteButton = await screen.findByTestId('vaccination-delete')
+
+    // First click only arms the confirmation: the row must still exist.
+    fireEvent.click(deleteButton)
+    expect(deleteButton).toHaveTextContent('Delete permanently?')
+    expect(screen.getByTestId(`vaccination-row-${doseId}`)).toBeInTheDocument()
+
+    fireEvent.click(deleteButton)
+    await waitFor(() => {
+      expect(screen.queryByTestId(`vaccination-row-${doseId}`)).not.toBeInTheDocument()
+    })
+    expect(screen.getByTestId('vaccinations-announcement')).toHaveTextContent('Vaccination deleted')
+  })
+
+  it('offers Undo after a dose is recorded', async () => {
+    const { petId, doseId } = await seedOverduePet()
+    renderPage(`?pet=${petId}`)
+    await screen.findByTestId(`vaccination-row-${doseId}`)
+
+    fireEvent.click(screen.getByTestId(`vaccination-add-dose-${doseId}`))
+    const form = await screen.findByTestId('vaccination-form')
+    fireEvent.click(within(form).getByTestId('vaccination-submit'))
+
+    const undo = await screen.findByTestId('vaccination-undo')
+    fireEvent.click(undo)
+    await waitFor(() => {
+      expect(screen.getAllByTestId(/^vaccination-row-/)).toHaveLength(1)
+    })
   })
 
   it('shows the empty state for a household without doses', async () => {

@@ -8,6 +8,7 @@ import {
 } from '@/components/app/StickyTable'
 import { Button } from '@/components/ui/button'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { Vaccination } from '@/lib/rules/types'
 import { formatDateKey } from '@/lib/schedule/format'
 import type { VaccinationSearch, VaccinationSortKey } from '@/lib/schedule/query'
 import type { VaccinationView } from '@/lib/schedule/vaccinations'
@@ -19,6 +20,7 @@ export interface VaccinationsTableProps {
   search: Pick<VaccinationSearch, 'sort' | 'dir'>
   onSort: (sort: VaccinationSortKey) => void
   onAddDose: (petId: string) => void
+  onEditDose: (dose: Vaccination) => void
 }
 
 interface SortHeaderProps {
@@ -66,7 +68,13 @@ function SortHeader({ label, sortKey, active, direction, onSort, className }: So
  * superseded row keeps its history but never claims a due status, because the
  * newest dose per vaccine is what the pet's status means (R1).
  */
-export function VaccinationsTable({ views, search, onSort, onAddDose }: VaccinationsTableProps) {
+export function VaccinationsTable({
+  views,
+  search,
+  onSort,
+  onAddDose,
+  onEditDose,
+}: VaccinationsTableProps) {
   return (
     <div className="border-border bg-card overflow-hidden rounded-xl border">
       <StickyTable
@@ -152,7 +160,16 @@ export function VaccinationsTable({ views, search, onSort, onAddDose }: Vaccinat
               <TableCell className="text-muted-foreground hidden lg:table-cell">
                 {view.dose.vetName ?? '—'}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-right whitespace-nowrap">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  data-testid={`vaccination-edit-${view.dose.id}`}
+                  onClick={() => onEditDose(view.dose)}
+                >
+                  Edit
+                </Button>
                 <Button
                   type="button"
                   variant="ghost"

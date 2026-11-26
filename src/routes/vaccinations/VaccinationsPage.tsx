@@ -28,6 +28,11 @@ import {
   vaccinationSortChange,
   type VaccinationView,
 } from '@/lib/schedule/vaccinations'
+import {
+  showVaccinationCreatedToast,
+  showVaccinationDeletedToast,
+  showVaccinationUpdatedToast,
+} from '@/lib/vaccination-actions'
 
 import { VaccinationDialog } from './components/VaccinationDialog'
 import { VaccinationsTable } from './components/VaccinationsTable'
@@ -58,15 +63,17 @@ export function VaccinationsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = useMemo(() => parseVaccinationSearch(searchParams), [searchParams])
   const { message, announce } = useAnnouncement()
-  const [dialog, setDialog] = useState<{ open: boolean; petId: string | null }>({
-    open: false,
-    petId: null,
-  })
+  const [dialog, setDialog] = useState<{
+    open: boolean
+    petId: string | null
+    /** The dose being corrected; null when adding a new one. */
+    editing: Vaccination | null
+  }>({ open: false, petId: null, editing: null })
 
   // The palette's "Add vaccination" create command lands here (?new=1),
   // prefilled from the pet filter the command carried.
   useCreateIntent(
-    () => setDialog({ open: true, petId: search.petId }),
+    () => setDialog({ open: true, petId: search.petId, editing: null }),
     state.kind === 'ready' && (state.data.pets.length > 0 || search.petId !== null),
   )
 
@@ -125,12 +132,25 @@ export function VaccinationsPage() {
   )
 
   function openDialog(petId: string | null): void {
-    setDialog({ open: true, petId })
+    setDialog({ open: true, petId, editing: null })
   }
+
+  const editingDose = dialog.editing
 
   function handleSaved(dose: Vaccination): void {
     const petName = pets.find((pet) => pet.id === dose.petId)?.name ?? 'the pet'
-    announce(`Vaccination added for ${petName}.`)
+    if (editingDose === null) {
+      announce(`Vaccination added for ${petName}.`)
+      showVaccinationCreatedToast(dose, petName)
+      return
+    }
+    announce(`Vaccination updated for ${petName}.`)
+    showVaccinationUpdatedToast(dose, petName)
+  }
+
+  function handleDeleted(dose: Vaccination): void {
+    announce('Vaccination deleted.')
+    showVaccinationDeletedToast(dose)
   }
 
   const defaultDialogPet = dialog.petId ?? search.petId ?? pets[0]?.id ?? null
@@ -342,18 +362,23 @@ export function VaccinationsPage() {
           search={search}
           onSort={handleSort}
           onAddDose={openDialog}
+          onEditDose={(dose) => setDialog({ open: true, petId: dose.petId, editing: dose })}
         />
       ) : null}
 
       {dialog.open ? (
         <VaccinationDialog
           open
-          onOpenChange={(open) => setDialog((current) => ({ ...current, open }))}
+          onOpenChange={(open) =>
+            setDialog((current) => ({ ...current, open, editing: open ? current.editing : null }))
+          }
           pets={pets}
           vaccineTypes={data?.vaccineTypes ?? []}
           defaultPetId={defaultDialogPet}
           today={today}
+          initial={dialog.editing}
           onSaved={handleSaved}
+          onDeleted={handleDeleted}
         />
       ) : null}
     </div>

@@ -87,19 +87,15 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
    */
   const [railContent, setRailContent] = useState(!open)
   useEffect(() => {
-    if (!open) {
-      const reduced =
-        typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      if (reduced) {
-        setRailContent(true)
-        return
-      }
-      const timer = setTimeout(() => setRailContent(true), SLIDE_MS)
-      return () => clearTimeout(timer)
-    }
-    setRailContent(false)
-    return
+    // Both branches go through a timer: a synchronous setState inside an effect
+    // is a cascading render, and the expand path only needs to wait a macrotask
+    // (the box is already widening, so the swap is invisible).
+    const reduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const delay = open ? 0 : reduced ? 0 : SLIDE_MS
+    const timer = setTimeout(() => setRailContent(!open), delay)
+    return () => clearTimeout(timer)
   }, [open])
 
   const rail = railContent

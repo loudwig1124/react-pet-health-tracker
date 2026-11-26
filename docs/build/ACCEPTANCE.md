@@ -192,6 +192,33 @@ Final numbers after this change: **172.8 kB** first load, 15.4 kB CSS, 67/67 e2e
 `docs/build/shots/m7-{1440,1024,900}-{dashboard,pets,appointments,journal}.png` plus the eight
 `edge-*` full-width shots.
 
+### 5c · Doses can be corrected (owner decision A + C, 2026-11-27)
+
+A misclicked vaccine or date was permanent, because the repository only exposed `appendVaccination`.
+The owner approved corrections, and this is what shipped:
+
+- **Correct in place** — every `/vaccinations` row (and the pet-detail Vaccinations tab) has an
+  **Edit** action. The dialog opens prefilled ("Edit vaccination" / "Save changes") and the row keeps its
+  `id` and `createdAt`, so an edit cannot reorder the R1 tie-break by accident. The same draft schema
+  that guards creation re-validates the edit; a date change re-derives the next-due date instead of
+  keeping a stale one that would fail validation.
+- **Delete with a confirm** — "Delete dose" arms to "Delete permanently?" before it removes the row.
+  Both surfaces announce the result.
+- **Undo after recording** — a newly saved dose raises the same three-second toast-with-Undo the
+  journal uses (`vaccination-undo`), so the common accident is recoverable without opening a dialog.
+
+Evidence: `vaccination-correction.test.ts` (correcting a typo flips the pet from *overdue* to *up to
+date* through R1; a rejected edit leaves the stored row untouched; delete empties the history),
+`vaccinations-page.test.tsx` (prefilled edit, two-click delete, Undo) and
+`schedule.spec.ts › a misclicked dose can be corrected, deleted, and undone after recording`
+(end-to-end on the real build).
+
+**Honest limitation:** corrections rewrite history — there is no audit trail and no "voided" state, a
+deliberate choice for a single-household notebook (option B was declined). R5's append-only contract
+still governs clinical records.
+
+Final numbers after this change: **172.5 kB** first load, 15.4 kB CSS, 68/68 e2e, 403 Vitest tests.
+
 ## 6 · Demo script — from a fresh build
 
 ```bash
