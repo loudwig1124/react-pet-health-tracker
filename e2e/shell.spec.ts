@@ -56,20 +56,23 @@ test('boots at 1440: six destinations, icons, owner footer and 64px header', asy
   await expectNoHorizontalOverflow(page)
 })
 
-test('boots at 1024 directly: rail by default, deep link survives reload', async ({ page }) => {
+test('boots at 1024 directly: expanded by default, collapse is remembered', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 })
   await expectRouteReady(page, ROUTES.journal, 'Journal')
 
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
+  // 1024 is the floor, not a collapse band: the sidebar only collapses on request.
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
   await page.reload()
   await expect(page.getByTestId('page-title')).toHaveText('Journal')
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
   await expect(page.getByTestId('nav-profile')).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
-  // On-demand expansion is offered at 1024–1279 (not forced rail).
+  // Collapsing is the user's choice, and it survives a reload.
   await page.getByTestId('sidebar-toggle').click()
-  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'expanded')
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
+  await page.reload()
+  await expect(page.getByTestId('app-sidebar')).toHaveAttribute('data-state', 'collapsed')
 })
 
 test('every destination deep-links and survives reload', async ({ page }) => {
@@ -133,7 +136,9 @@ test('the rail toggle and the Profile footer are mouse-only affordances at 1440'
   await expectTitle(page, 'Profile')
 })
 
-test('live resize 1440 → 1024 → 900 collapses to the rail without overflow', async ({ page }) => {
+test('live resize 1440 → 1024 → 900 keeps the sidebar until the floor, then forces the rail', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await openApp(page)
   const sidebar = page.getByTestId('app-sidebar')
@@ -141,7 +146,8 @@ test('live resize 1440 → 1024 → 900 collapses to the rail without overflow',
   await expectNoHorizontalOverflow(page, '1440')
 
   await page.setViewportSize({ width: 1024, height: 768 })
-  await expect(sidebar).toHaveAttribute('data-state', 'collapsed')
+  // The floor itself still shows the expanded sidebar.
+  await expect(sidebar).toHaveAttribute('data-state', 'expanded')
   // 64 px at 1024; 56 px only below it (03 §1).
   const header1024 = await page
     .getByTestId('app-header')
@@ -150,18 +156,25 @@ test('live resize 1440 → 1024 → 900 collapses to the rail without overflow',
   await expect(page.getByTestId('nav-profile')).toBeVisible()
   await expectNoHorizontalOverflow(page, '1024')
 
-  // The footer stays reachable at 1024 — expandable on demand there.
-  await page.getByTestId('sidebar-toggle').click()
-  await expect(sidebar).toHaveAttribute('data-state', 'expanded')
+  // The footer stays reachable at 1024, and collapsing there is a choice.
   await page.getByTestId('nav-profile').click()
   await expect(page).toHaveURL(/\/profile$/)
+  await page.getByTestId('sidebar-toggle').click()
+  await expect(sidebar).toHaveAttribute('data-state', 'collapsed')
 
   await page.setViewportSize({ width: 900, height: 800 })
   await expect(sidebar).toHaveAttribute('data-state', 'collapsed')
-  const compactHeader = await page
-    .getByTestId('app-header')
-    .evaluate((element) => element.getBoundingClientRect().height)
-  expect(compactHeader).toBe(56)
+  // The header height now eases across the breakpoint, so poll rather than
+  // sampling the first frame of the transition.
+  await expect
+    .poll(
+      async () =>
+        await page
+          .getByTestId('app-header')
+          .evaluate((element) => element.getBoundingClientRect().height),
+      { timeout: 1000 },
+    )
+    .toBe(56)
   await expect(page.getByTestId('sidebar-toggle')).toHaveCount(0)
   await expect(page.getByTestId('nav-profile')).toBeVisible()
   await expect(page.getByTestId('footer-owner-name')).toHaveCount(0) // avatar only in the rail

@@ -94,7 +94,7 @@ household — is designed into the data layer now and built after M5 as the v1.1
 [05](./05-new-desktop-features.md) as deferred and in [06](./06-build-plan.md) as post-M5 work.
 
 **Responsiveness — clarified.** [03 §1–§2](./03-ia-layout-motion.md) specifies the breakpoints
-(1920 / 1440 / 1280 / 1024–1279 / forced rail <1024) and M1 accepts a first paint at 1024 and 1440. What
+(1920 / 1440 / 1280 / 1024–1279 / forced rail <1024; the sidebar only collapses by user choice) and M1 accepts a first paint at 1024 and 1440. What
 the documents did **not** pin down is **live resizing**: shrinking the window while a screen is open must
 collapse the sidebar, convert the journal editor to a sheet, make tables scroll horizontally with a sticky
 name column, and never produce horizontal overflow. That is now an explicit M1 (structural) and

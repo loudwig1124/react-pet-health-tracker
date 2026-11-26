@@ -21,7 +21,7 @@ scroll container with a sticky 64 px header. Nothing else scrolls except dialog 
 | 1920 | 240 expanded | 1200/1440 container centred; detail keeps all three columns; space stays gutter |
 | 1440–1919 | 240 expanded | Standard: dashboard 2-col, detail 3-col, journal 3-col |
 | 1280–1439 | 240 expanded | Journal editor 320→280; appointments calendar 300→280; detail rail 240 |
-| 1024–1279 | 72 rail (expand on demand) | One content column; journal editor becomes a Sheet; appointments toggles table/calendar; detail rail stacks |
+| 1024–1279 | 240 px sidebar (collapses only on request) | One content column; journal editor becomes a Sheet; appointments toggles table/calendar; detail rail stacks |
 | <1024 | 72 rail, forced | 16 px gutters; tables scroll horizontally with the name column sticky; no phone redesign in v1 |
 
 **Active state.** Accent-soft tile, 3×16 accent pill, accent icon, ink 600 label (rail: 40×40 tile with

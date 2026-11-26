@@ -42,25 +42,28 @@ describe('navigation contract (03 §2 revised)', () => {
 })
 
 describe('sidebar collapse rule (03 §1)', () => {
-  it('is expanded at 1440 and rail at 1024', () => {
+  it('is expanded at 1440 and still expanded at the 1024 floor', () => {
     expect(resolveSidebarMode(1440, 'auto')).toBe('expanded')
-    expect(resolveSidebarMode(1024, 'auto')).toBe('rail')
+    // Owner fix: the sidebar only collapses on request, not on crossing a band.
+    expect(resolveSidebarMode(1024, 'auto')).toBe('expanded')
+    expect(resolveSidebarMode(1100, 'auto')).toBe('expanded')
+    expect(resolveSidebarMode(1279, 'auto')).toBe('expanded')
   })
 
-  it('forces the rail below 1024 even when temporarily expanded', () => {
+  it('forces the rail below 1024 whatever the preference', () => {
     expect(FORCED_RAIL_BELOW).toBe(1024)
     expect(isForcedRail(900)).toBe(true)
-    expect(resolveSidebarMode(900, 'auto', true)).toBe('rail')
-    expect(resolveSidebarMode(1023, 'rail', true)).toBe('rail')
+    expect(resolveSidebarMode(900, 'auto')).toBe('rail')
+    expect(resolveSidebarMode(1023, 'rail')).toBe('rail')
   })
 
-  it('expands on demand between 1024 and 1279 without persisting it', () => {
-    expect(EXPANDED_FROM).toBe(1280)
-    expect(resolveSidebarMode(1200, 'auto', false)).toBe('rail')
-    expect(resolveSidebarMode(1200, 'auto', true)).toBe('expanded')
+  it('collapses only on request, at any width above the floor', () => {
+    expect(EXPANDED_FROM).toBe(FORCED_RAIL_BELOW)
+    expect(resolveSidebarMode(1200, 'auto')).toBe('expanded')
+    expect(resolveSidebarMode(1200, 'rail')).toBe('rail')
   })
 
-  it('honours the persisted collapse preference at ≥1280 only', () => {
+  it('honours the persisted collapse preference at every width it allows', () => {
     expect(resolveSidebarMode(1440, 'rail')).toBe('rail')
     expect(resolveSidebarMode(1440, 'auto')).toBe('expanded')
   })

@@ -2,10 +2,11 @@
  * Viewport and sidebar-preference hooks. Split from the pure rules in
  * `src/lib/shell.ts` so those can be tested without a DOM.
  */
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 import {
   type SidebarPreference,
+  FORCED_RAIL_BELOW,
   SIDEBAR_PREFERENCE_STORAGE_KEY,
   isForcedRail,
   parseSidebarPreference,
@@ -78,9 +79,8 @@ export interface SidebarModel {
 
 /**
  * The responsive collapse rule in one place:
- * - ≥1280 px: user preference, persisted (`auto` expanded / `rail` collapsed)
- * - 1024–1279: rail by default, temporary expand on demand (not persisted)
- * - <1024: rail forced; toggling is a no-op
+ * - ≥1024 px: the user's persisted preference — expanded unless they collapsed it
+ * - <1024 px: rail forced; toggling is a no-op
  */
 export function useSidebarModel(): SidebarModel {
   const width = useViewportWidth()
@@ -89,23 +89,12 @@ export function useSidebarModel(): SidebarModel {
   // any resize inside the 1024–1279 band resets it, and leaving the band always
   // renders the rail. Deriving it during render (instead of an effect) keeps a
   // live resize from ever leaving the sidebar expanded where it must be a rail.
-  const [temporary, setTemporary] = useState<{ width: number; expanded: boolean }>({
-    width: -1,
-    expanded: false,
-  })
-  const inDemandBand = width >= 1024 && width < 1280
-  const temporaryExpanded = inDemandBand && temporary.width === width ? temporary.expanded : false
-
   const forced = isForcedRail(width)
-  const mode = resolveSidebarMode(width, preference, temporaryExpanded)
+  const mode = resolveSidebarMode(width, preference)
 
   const setOpen = useCallback(
     (open: boolean) => {
-      if (width < 1024) {
-        return
-      }
-      if (width < 1280) {
-        setTemporary({ width, expanded: open })
+      if (width < FORCED_RAIL_BELOW) {
         return
       }
       writePreference(open ? 'auto' : 'rail')

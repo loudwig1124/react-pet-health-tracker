@@ -65,17 +65,18 @@ describe('AppShell (M1)', () => {
     expect(screen.getByTestId('app-sidebar')).toBeInTheDocument()
   })
 
-  it('collapses to the rail on live resize 1440 → 1024 → 900 without losing Profile', async () => {
+  it('stays expanded down to 1024 and only forces the rail below it', async () => {
     renderApp('/')
     await waitForShell()
     const sidebar = screen.getByTestId('app-sidebar')
     expect(sidebar).toHaveAttribute('data-state', 'expanded')
 
+    // 1024 is the floor, not a collapse band: the sidebar stays put.
     act(() => {
       window.innerWidth = 1024
       window.dispatchEvent(new Event('resize'))
     })
-    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'collapsed'))
+    await waitFor(() => expect(sidebar).toHaveAttribute('data-state', 'expanded'))
     expect(screen.getByTestId('nav-profile')).toBeInTheDocument()
 
     act(() => {

@@ -107,7 +107,7 @@ src/
 └── styles/tokens.css            # the only file with hex values (04 §1)
 ```
 
-The shell: 240 px sidebar / 72 px rail (forced below 1024, expandable on demand 1024–1279),
+The shell: 240 px sidebar, 72 px rail below 1024 (forced) or when the user collapses it,
 64/56 px sticky header, full-width content (one 24/16 px gutter, no centred cap), one scroll container,
 the rail toggle in the sidebar's brand row, six destinations with
 Lucide icons and a pinned Profile footer (avatar only in the rail). Settings lives inside Profile;

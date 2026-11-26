@@ -28,25 +28,23 @@ export const PROFILE_PATH = '/profile'
 /* ------------------------------------------------------------ sidebar mode */
 
 export const FORCED_RAIL_BELOW = 1024
-export const EXPANDED_FROM = 1280
+/** The sidebar is expanded by default from this width up; only the user's own
+ * choice ('rail', persisted) collapses it. Below FORCED_RAIL_BELOW it is forced. */
+export const EXPANDED_FROM = FORCED_RAIL_BELOW
 
 export type SidebarPreference = 'auto' | 'rail'
 export type SidebarMode = 'expanded' | 'rail'
 
 /**
- * Resolves the rendered sidebar mode. `temporaryExpanded` is the
- * "expand on demand" state available at 1024–1279 px only.
+ * Resolves the rendered sidebar mode: forced rail under 1024 px, otherwise the
+ * user's persisted choice (expanded unless they collapsed it).
  */
 export function resolveSidebarMode(
   viewportWidth: number,
   preference: SidebarPreference,
-  temporaryExpanded = false,
 ): SidebarMode {
   if (viewportWidth < FORCED_RAIL_BELOW) {
     return 'rail'
-  }
-  if (viewportWidth < EXPANDED_FROM) {
-    return temporaryExpanded ? 'expanded' : 'rail'
   }
   return preference === 'rail' ? 'rail' : 'expanded'
 }
