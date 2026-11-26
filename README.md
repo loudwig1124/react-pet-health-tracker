@@ -1,4 +1,4 @@
-# Pet Health Tracker — desktop (React)
+# React Pet Health Tracker
 
 A desktop rebuild of the Flutter Pet Health Tracker: an offline household notebook for one owner,
 several pets, a shared journal, vet appointments, vaccinations and append-only clinical notes.
@@ -28,8 +28,8 @@ The approved plan is in [`docs/plan/`](./docs/plan/); `00-PLAN.md` is the approv
 (`npm i -g pnpm@10`, or `corepack enable`).
 
 ```bash
-git clone https://github.com/loudwig1124/pet-health-tracker-web.git
-cd pet-health-tracker-web
+git clone https://github.com/loudwig1124/react-pet-health-tracker.git
+cd react-pet-health-tracker
 pnpm install          # resolves the lockfile; no postinstall scripts run
 pnpm dev              # http://127.0.0.1:5173
 ```
@@ -37,7 +37,7 @@ pnpm dev              # http://127.0.0.1:5173
 First launch shows the **Welcome** card: your name, your first pet, or one tap to load the sample
 household. Nothing leaves the browser — no account, no server, no network calls.
 
-**A hosted copy lives at <https://loudwig1124.github.io/pet-health-tracker-web/>** (same app, same
+**A hosted copy lives at <https://loudwig1124.github.io/react-pet-health-tracker/>** (same app, same
 local-only storage, deployed by `.github/workflows/deploy-web.yml`).
 
 > On the machine this was developed on, `~/Library/Caches` is read-only under a sandbox, so a local
