@@ -147,7 +147,10 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
             <span
               aria-hidden="true"
               data-testid="sidebar-brand"
-              className="bg-accent-soft text-primary flex size-8 items-center justify-center rounded-lg"
+              // Same box as the expand button above it (32 × 40), so the two
+              // rail heads are interchangeable rather than one being a 32 px
+              // square and the other a taller tile.
+              className="bg-accent-soft text-primary flex h-10 w-8 items-center justify-center rounded-lg"
             >
               <PawPrint className="size-4" strokeWidth={2.25} />
             </span>
