@@ -119,7 +119,10 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
     >
       <div
         className={cn(
-          'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b',
+          // The header height transitions across the breakpoint; this row must
+          // ease with it or its divider sits ~8 px above the header's for one
+          // slide.
+          'border-sidebar-border flex h-[var(--header-height)] shrink-0 items-center border-b transition-[height] duration-[var(--dur-sidebar)] ease-[var(--ease-standard)]',
           rail ? 'justify-start px-4' : 'justify-between gap-2 px-4',
         )}
       >
@@ -226,11 +229,9 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                   // the collapsed nav and the full-width rows when expanded. The
                   // pill, the hover band and the 3 px active marker therefore
                   // never move sideways when the sidebar is collapsed.
-                  // Compressed: a 32 px tile starting on the same 16 px inset as
-                  // the expanded rows. Its icon therefore lands on the exact
-                  // column the expanded icons use (16 + 8 = 24 px), so the icon
-                  // never shifts when the sidebar collapses.
-                  rail && 'w-8 justify-center rounded-lg px-0',
+                  // Compressed: a 40 × 40 rounded square, centred in the rail —
+                  // the shape the owner prefers over a narrow vertical pill.
+                  rail && 'w-10 justify-center rounded-lg px-0',
                   active && 'text-sidebar-accent-foreground',
                 )}
               >
@@ -285,7 +286,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
                 aria-label={owner ? `Profile — ${owner.name}` : 'Profile'}
                 data-testid="nav-profile"
                 data-active={isDestinationActive(pathname, PROFILE_PATH)}
-                className="app-nav-item focus-visible:ring-sidebar-ring hover:bg-sidebar-accent flex h-10 w-8 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
+                className="app-nav-item focus-visible:ring-sidebar-ring hover:bg-sidebar-accent flex h-10 w-10 items-center justify-center rounded-md focus-visible:ring-2 focus-visible:outline-none"
               >
                 <OwnerAvatar ownerName={owner?.name} />
               </Link>
