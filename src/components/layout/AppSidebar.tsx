@@ -139,7 +139,7 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
               title="Expand sidebar"
               onClick={onToggle}
               data-testid="sidebar-toggle"
-              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex h-10 w-8 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
+              className="hover:bg-sidebar-accent focus-visible:ring-sidebar-ring inline-flex size-10 items-center justify-center rounded-lg transition-colors duration-[var(--dur-fast)] focus-visible:ring-2 focus-visible:outline-none"
             >
               <PanelLeft aria-hidden="true" className="size-4" />
             </button>
@@ -147,10 +147,10 @@ export function AppSidebar({ open, onToggle, showToggle }: AppSidebarProps) {
             <span
               aria-hidden="true"
               data-testid="sidebar-brand"
-              // Same box as the expand button above it (32 × 40), so the two
-              // rail heads are interchangeable rather than one being a 32 px
-              // square and the other a taller tile.
-              className="bg-accent-soft text-primary flex h-10 w-8 items-center justify-center rounded-lg"
+              // Grown to the expand button's 40 × 40 box (owner fix): the head
+              // controls keep their full size rather than one shrinking to fit
+              // the other.
+              className="bg-accent-soft text-primary flex size-10 items-center justify-center rounded-lg"
             >
               <PawPrint className="size-4" strokeWidth={2.25} />
             </span>
